@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace AdventOfCode.Dec2
 {
@@ -34,14 +36,45 @@ namespace AdventOfCode.Dec2
 
             Assert.That(sa, Is.EqualTo(expectedSa));
         }
+
+        [Test]
+        public void WrappingPaperRequired_WithStringRepresentation_CalcsCorrectly()
+        {
+            var sa = _calc.WrappingPaperRequired("2x3x4");
+
+            Assert.That(sa, Is.EqualTo(58));
+        }
+
+        [Test]
+        public void WrappingPaperRequired_Works()
+        {
+            var contents = File.ReadAllText("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec2\\Test.txt")
+                               .Split(new [] {Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                               .ToList();
+
+            var total = _calc.WrappingPaperRequired(contents);
+
+            Console.WriteLine(total.ToString());
+        }
     }
 
     public class PaperCalculator
     {
-        public int WrappingPaperRequired(int length, int width, int height)
+        public int WrappingPaperRequired(IEnumerable<string> dimensions)
         {
-            var surfaceArea = SurfaceAreaOf(length, width, height);
-            var sidesOrdered = new[] {length, width, height}.OrderBy(x => x).ToList();
+            return dimensions.Sum(WrappingPaperRequired);
+        }
+
+        public int WrappingPaperRequired(string dimensions)
+        {
+            var sides = dimensions.Split('x').Select(int.Parse).ToArray();
+            return WrappingPaperRequired(sides);
+        }
+
+        public int WrappingPaperRequired(params int[] sides)
+        {
+            var surfaceArea = SurfaceAreaOf(sides[0], sides[1], sides[2]);
+            var sidesOrdered = sides.OrderBy(x => x).ToList();
             var smallestSideArea = sidesOrdered.First()*sidesOrdered.Skip(1).First();
             return surfaceArea + smallestSideArea;
         }
