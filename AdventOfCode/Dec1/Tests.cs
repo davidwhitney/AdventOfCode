@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace AdventOfCode.Dec1
 {
@@ -14,9 +13,9 @@ namespace AdventOfCode.Dec1
         {
             var climber = new Climber();
 
-            var floor = climber.Climb("(");
+            var report = climber.Climb("(");
 
-            Assert.That(floor, Is.EqualTo(1));
+            Assert.That(report.FinalFloor, Is.EqualTo(1));
         }
 
         [Test]
@@ -24,9 +23,9 @@ namespace AdventOfCode.Dec1
         {
             var climber = new Climber();
 
-            var floor = climber.Climb(")");
+            var report = climber.Climb(")");
 
-            Assert.That(floor, Is.EqualTo(-1));
+            Assert.That(report.FinalFloor, Is.EqualTo(-1));
         }
 
         [Test]
@@ -34,17 +33,46 @@ namespace AdventOfCode.Dec1
         {
             var contents = File.ReadAllText("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec1\\Test.txt");
 
-            var floor = new Climber().Climb(contents);
+            var report = new Climber().Climb(contents);
 
-            Console.WriteLine(floor);
+            Console.WriteLine(report.ToString());
         }
     }
 
     public class Climber
     {
-        public int Climb(string plan)
+        public ExhaustedSantaReport Climb(string floorPlan)
         {
-            return plan.Count(x => x == '(') - plan.Count(x => x == ')');
+            var floor = 0;
+            int? basementAt = null;
+
+            var valueMap = new Dictionary<char, int> {{'(', 1}, {')', -1}};
+
+            for (var i = 0; i < floorPlan.Length; i++)
+            {
+                floor += valueMap[floorPlan[i]];
+                if (floor < 0) basementAt = i + 1;
+            }
+
+            return new ExhaustedSantaReport(floor, basementAt);
+        }
+    }
+
+    public class ExhaustedSantaReport
+    {
+        public int FinalFloor { get; }
+        public int? FirstBasementTrip { get; }
+
+        public ExhaustedSantaReport(int floor, int? basementVisit)
+        {
+            FinalFloor = floor;
+            FirstBasementTrip = basementVisit;
+        }
+
+        public override string ToString()
+        {
+            return $"Final floor: {FinalFloor}{Environment.NewLine}" +
+                   $"First basement visit at: {FirstBasementTrip}";
         }
     }
 }
