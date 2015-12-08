@@ -44,6 +44,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dec1\Climber.cs" />
+    <Compile Include="Dec1\ExhaustedSantaReport.cs" />
     <Compile Include="Dec1\Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
