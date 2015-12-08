@@ -30,17 +30,26 @@ namespace AdventOfCode.Dec4
 
             Assert.That(lowestStem, Is.EqualTo(expected));
         }
+
+        [Ignore("Slow!")]
+        [TestCase("yzbqklnj", 282749)] // Challenge
+        public void Mine_WithKnownHashForSixZeros_ReturnsKnownValue(string stub, int expected)
+        {
+            var lowestStem = _miner.Mine(stub, 6);
+
+            Assert.That(lowestStem, Is.EqualTo(expected));
+        }
     }
 
     public class AdventCoinMiner
     {
-        public int Mine(string stub)
+        public int Mine(string stub, int leadingZeroCount = 5)
         {
             for (var i = 0; i < int.MaxValue; i++)
             {
                 var hash = Hash(stub + i);
 
-                if (hash.StartsWith("00000"))
+                if (hash.StartsWith(string.Join("", Enumerable.Repeat("0", leadingZeroCount))))
                 {
                     return i;
                 }
