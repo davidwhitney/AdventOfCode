@@ -32,7 +32,7 @@ namespace AdventOfCode.Dec4
         }
 
         [Ignore("Slow!")]
-        [TestCase("yzbqklnj", 282749)] // Challenge
+        [TestCase("yzbqklnj", 9962624)] // Challenge
         public void Mine_WithKnownHashForSixZeros_ReturnsKnownValue(string stub, int expected)
         {
             var lowestStem = _miner.Mine(stub, 6);
