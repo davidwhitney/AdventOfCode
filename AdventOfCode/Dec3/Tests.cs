@@ -28,6 +28,18 @@ namespace AdventOfCode.Dec3
             Assert.That(_gps.DistinctLocationsDelivered, Is.EqualTo(uniques));
         }
 
+        [TestCase("^v", 3)]
+        [TestCase("^>v<", 3)]
+        [TestCase("^v^v^v^v^v", 11)]
+        public void DeliverTo_WithBotGivenDirections_CountsDistinctLocationsVisited(string directions, int uniques)
+        {
+            _gps.AddDeliveryBot();
+
+            _gps.DeliverTo(directions);
+
+            Assert.That(_gps.DistinctLocationsDelivered, Is.EqualTo(uniques));
+        }
+
         [Test]
         public void DeliverTo_DoChallange()
         {
@@ -36,6 +48,18 @@ namespace AdventOfCode.Dec3
             _gps.DeliverTo(contents);
 
             Assert.That(_gps.DistinctLocationsDelivered, Is.EqualTo(2081));
+        }
+
+        [Test]
+        public void DeliverTo_WithBot_DoChallange()
+        {
+            _gps.AddDeliveryBot();
+
+            var contents = File.ReadAllText("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec3\\Test.txt");
+
+            _gps.DeliverTo(contents);
+
+            Assert.That(_gps.DistinctLocationsDelivered, Is.EqualTo(2341));
         }
     }
 }

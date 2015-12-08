@@ -6,7 +6,7 @@ namespace AdventOfCode.Dec3
 {
     public class SantaGps
     {
-        private readonly Location _location = new Location();
+        private readonly Queue<Location> _deliveryAgentLocations = new Queue<Location>();
         private readonly List<Location> _visited = new List<Location>();
         public int DistinctLocationsDelivered => _visited.Distinct().Count();
 
@@ -18,14 +18,31 @@ namespace AdventOfCode.Dec3
             {'v', l => l.Y--}
         };
 
+        public SantaGps()
+        {
+            _deliveryAgentLocations.Enqueue(new Location());
+        }
+
+        public void AddDeliveryBot()
+        {
+            _deliveryAgentLocations.Enqueue(new Location());
+        }
+
         public void DeliverTo(IEnumerable<char> directions)
         {
-            _visited.Add(_location.Clone());
+            foreach (var robot in _deliveryAgentLocations)
+            {
+                _visited.Add(robot.Clone());
+            }
 
             foreach (var dir in directions)
             {
-                _nav[dir](_location);
-                _visited.Add(_location.Clone());
+                var robot = _deliveryAgentLocations.Dequeue();
+
+                _nav[dir](robot);
+                _visited.Add(robot.Clone());
+
+                _deliveryAgentLocations.Enqueue(robot);
             }
         }
     }
