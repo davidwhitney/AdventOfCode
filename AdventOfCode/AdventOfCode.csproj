@@ -52,6 +52,7 @@
     <Compile Include="Dec3\Location.cs" />
     <Compile Include="Dec3\SantaGps.cs" />
     <Compile Include="Dec3\Tests.cs" />
+    <Compile Include="Dec4\Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
