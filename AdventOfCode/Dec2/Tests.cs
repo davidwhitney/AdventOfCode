@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace AdventOfCode.Dec2
 {
@@ -40,9 +35,19 @@ namespace AdventOfCode.Dec2
         [Test]
         public void WrappingPaperRequired_WithStringRepresentation_CalcsCorrectly()
         {
-            var sa = _calc.WrappingPaperRequired("2x3x4");
+            var sides = "2x3x4".Split('x').Select(int.Parse).ToArray();
+            var sa = _calc.WrappingPaperRequired(sides);
 
             Assert.That(sa, Is.EqualTo(58));
+        }
+
+        [TestCase(2, 3, 4, 34)]
+        [TestCase(1, 1, 10, 14)]
+        public void RibbonRequired_CalcsCorrectly(int w, int l, int h, int expected)
+        {
+            var ribbonLength = _calc.RibbonRequred(w, l, h);
+
+            Assert.That(ribbonLength, Is.EqualTo(expected));
         }
 
         [Test]
@@ -53,35 +58,10 @@ namespace AdventOfCode.Dec2
                                .ToList();
 
             var total = _calc.WrappingPaperRequired(contents);
+            var totalRibbon = _calc.RibbonRequred(contents);
 
             Console.WriteLine(total.ToString());
-        }
-    }
-
-    public class PaperCalculator
-    {
-        public int WrappingPaperRequired(IEnumerable<string> dimensions)
-        {
-            return dimensions.Sum(WrappingPaperRequired);
-        }
-
-        public int WrappingPaperRequired(string dimensions)
-        {
-            var sides = dimensions.Split('x').Select(int.Parse).ToArray();
-            return WrappingPaperRequired(sides);
-        }
-
-        public int WrappingPaperRequired(params int[] sides)
-        {
-            var surfaceArea = SurfaceAreaOf(sides[0], sides[1], sides[2]);
-            var sidesOrdered = sides.OrderBy(x => x).ToList();
-            var smallestSideArea = sidesOrdered.First()*sidesOrdered.Skip(1).First();
-            return surfaceArea + smallestSideArea;
-        }
-
-        public int SurfaceAreaOf(int length, int width, int height)
-        {
-            return 2*length*width + 2*width*height + 2*height*length;
+            Console.WriteLine(totalRibbon.ToString());
         }
     }
 }
