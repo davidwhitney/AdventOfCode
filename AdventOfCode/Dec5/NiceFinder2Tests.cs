@@ -16,40 +16,47 @@ namespace AdventOfCode.Dec5
         }
 
         [TestCase("xyxy")]
-        [TestCase("aabcdefgaa")]
         [TestCase("qjhvhtzxzqqjkmpb")]
         [TestCase("xxyxx")]
-        public void IsNice_WithTwoPairs_IsNice(string s)
+        public void ContainsLetterPairs_WithTwoPairs_IsNice(string s)
         {
-            var count = NiceFinder2.ContainsLetterPairs(s);
+            var count = _sut.IsNice(s);
 
             Assert.That(count, Is.True);
         }
 
         [TestCase("aaa")]
-        public void IsNice_WithOverlappingTwoPairs_IsNotNice(string s)
+        public void ContainsLetterPairs_WithOverlappingTwoPairs_IsNotNice(string s)
         {
-            var count = NiceFinder2.ContainsLetterPairs(s);
+            var count = _sut.IsNice(s);
 
             Assert.That(count, Is.False);
         }
 
-        [TestCase("xyx")]
-        [TestCase("abcdefeghi")]
-        [TestCase("aaa")]
-        public void IsNice_WithSpacedRepeatingLetters_IsNice(string s)
+        [TestCase("qjhvhtzxzqqjkmpb")]
+        [TestCase("xxyxx")]
+        public void IsNice_Examples_AreNice(string s)
         {
-            var count = NiceFinder2.ContainsSpacedRepeats(s);
+            var count = _sut.IsNice(s);
 
             Assert.That(count, Is.True);
+        }
+
+        [TestCase("uurcxstgmygtbstg")]
+        [TestCase("ieodomkazucvgmuy")]
+        public void IsNice_Examples_AreNotNice(string s)
+        {
+            var count = _sut.IsNice(s);
+
+            Assert.That(count, Is.False);
         }
         
         [Test]
         public void IsNice_DoChallange()
         {
-            //var contents = File.ReadLines("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec5\\Test.txt").ToList();
+            var contents = File.ReadLines("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec5\\Test.txt").ToList();
 
-            //Assert.That(contents.Count(s => _sut.IsNice(s)), Is.EqualTo(236));
+            Assert.That(contents.Count(s => _sut.IsNice(s)), Is.EqualTo(51));
         }
     }
 }
