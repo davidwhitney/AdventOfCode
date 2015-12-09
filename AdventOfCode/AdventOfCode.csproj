@@ -52,7 +52,10 @@
     <Compile Include="Dec3\Location.cs" />
     <Compile Include="Dec3\SantaGps.cs" />
     <Compile Include="Dec3\Tests.cs" />
+    <Compile Include="Dec4\AdventCoinMiner.cs" />
     <Compile Include="Dec4\Tests.cs" />
+    <Compile Include="Dec5\NiceFinder.cs" />
+    <Compile Include="Dec5\Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -64,7 +67,9 @@
     </Content>
     <Content Include="Dec2\Test.txt" />
     <Content Include="Dec3\Test.txt" />
+    <Content Include="Dec5\Test.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

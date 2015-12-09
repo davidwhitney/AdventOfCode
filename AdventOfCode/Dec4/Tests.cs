@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -38,33 +34,6 @@ namespace AdventOfCode.Dec4
             var lowestStem = _miner.Mine(stub, 6);
 
             Assert.That(lowestStem, Is.EqualTo(expected));
-        }
-    }
-
-    public class AdventCoinMiner
-    {
-        public int Mine(string stub, int leadingZeroCount = 5)
-        {
-            for (var i = 0; i < int.MaxValue; i++)
-            {
-                var hash = Hash(stub + i);
-
-                if (hash.StartsWith(string.Join("", Enumerable.Repeat("0", leadingZeroCount))))
-                {
-                    return i;
-                }
-            }
-
-            return 0;
-        }
-
-        private static string Hash(string stub)
-        {
-            var encodedPassword = new UTF8Encoding().GetBytes(stub);
-            var hash = ((HashAlgorithm) CryptoConfig.CreateFromName("MD5")).ComputeHash(encodedPassword);
-            return BitConverter.ToString(hash)
-                .Replace("-", string.Empty)
-                .ToLower();
         }
     }
 }
