@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 
 namespace AdventOfCode.Dec1
@@ -47,6 +48,16 @@ namespace AdventOfCode.Dec1
             var report = new Climber().Climb(contents);
 
             Console.WriteLine(report.ToString());
+        }
+
+        [Test]
+        public void Climber_DoChallangeGolf()
+        {
+            var floor = 0;
+            File.ReadAllText("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec1\\Test.txt")
+                .ToList()
+                .ForEach(c => floor += c == '(' ? 1 : -1);
+            Console.WriteLine(floor);
         }
     }
 }
