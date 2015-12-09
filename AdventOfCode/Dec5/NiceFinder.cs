@@ -21,7 +21,7 @@ namespace AdventOfCode.Dec5
                 ContainsThreeVowels,
                 ContainsLetterPairs
             }
-                .All(rule => rule(s));
+            .All(rule => rule(s));
         }
 
     }
