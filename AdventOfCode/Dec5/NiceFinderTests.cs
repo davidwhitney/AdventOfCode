@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace AdventOfCode.Dec5
 {
     [TestFixture]
-    public class Tests
+    public class NiceFinderTests
     {
         private NiceFinder _sut;
 
