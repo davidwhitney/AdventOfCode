@@ -61,6 +61,7 @@
     <Compile Include="Dec6\Coord.cs" />
     <Compile Include="Dec6\LightBox.cs" />
     <Compile Include="Dec6\Tests.cs" />
+    <Compile Include="Dec7\Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
