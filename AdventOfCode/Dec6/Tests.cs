@@ -52,12 +52,15 @@ namespace AdventOfCode.Dec6
             Assert.That(_sut.StatusAt(0, 0), Is.EqualTo(true));
         }
 
+        [Ignore("Slow!")]
         [Test]
         public void Toggle_DoChallange()
         {
             var contents = File.ReadLines("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec6\\Test.txt").ToList();
-            
 
+            contents.ForEach(x => _sut.Toggle(x));
+
+            Assert.That(_sut.TotalLightsOn, Is.EqualTo(569999));
         }
 
     }
@@ -65,6 +68,7 @@ namespace AdventOfCode.Dec6
     public class LightBox
     {
         private readonly bool[,] _box;
+        public int TotalLightsOn { get; private set; }
 
         public LightBox()
         {
@@ -73,24 +77,48 @@ namespace AdventOfCode.Dec6
 
         public void Toggle(string instruction)
         {
-            var results = Regex.Match(instruction, "turn (.*) ([0-9+]),([0-9+]) through ([0-9+]),([0-9+])");
+            var results = Regex.Match(instruction.Trim(), "(.*) ([0-9]+),([0-9]+) through ([0-9]+),([0-9]+)");
 
             var bottomLeft = new Coord(int.Parse(results.Groups[2].Value), int.Parse(results.Groups[3].Value));
             var topRight = new Coord(int.Parse(results.Groups[4].Value), int.Parse(results.Groups[5].Value));
-            var turnOn = results.Groups[1].Value == "on";
+            bool? turnOn = results.Groups[1].Value == "turn on";
+
+            if (results.Groups[1].Value == "toggle")
+            {
+                turnOn = null;
+            }
 
             Toggle(bottomLeft, topRight, turnOn);
 
         }
 
-        public void Toggle(Coord bottomLeft, Coord topRight, bool turnOn)
+        public void Toggle(Coord bottomLeft, Coord topRight, bool? turnOn = null)
         {
             for (int x = bottomLeft.X; x <= topRight.X; x++)
             {
                 for (int y = bottomLeft.Y; y <= topRight.Y; y++)
                 {
-                    _box[y, x] = turnOn;
+                    var currentState = _box[y, x];
+                    var desiredState = turnOn ?? !_box[y, x];
+                    _box[y, x] = desiredState;
+
+                    if (currentState != desiredState)
+                    {
+                        RecordState(y, x);
+                    }
                 }
+            }
+        }
+
+        private void RecordState(int y, int x)
+        {
+            if (_box[y, x])
+            {
+                TotalLightsOn++;
+            }
+            else
+            {
+                TotalLightsOn--;
             }
         }
 
