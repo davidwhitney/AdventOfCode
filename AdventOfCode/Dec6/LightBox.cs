@@ -6,6 +6,8 @@ namespace AdventOfCode.Dec6
     {
         private readonly bool[,] _box;
         private readonly int[,] _brightness;
+
+        // Cheap hacks.
         public int TotalLightsOn { get; private set; }
         public int BrightnessTracker { get; private set; }
 
@@ -21,12 +23,9 @@ namespace AdventOfCode.Dec6
 
             var bottomLeft = new Coord(int.Parse(results.Groups[2].Value), int.Parse(results.Groups[3].Value));
             var topRight = new Coord(int.Parse(results.Groups[4].Value), int.Parse(results.Groups[5].Value));
-            bool? turnOn = results.Groups[1].Value == "turn on";
 
-            if (results.Groups[1].Value == "toggle")
-            {
-                turnOn = null;
-            }
+            bool? turnOn = results.Groups[1].Value == "turn on";
+            turnOn = results.Groups[1].Value == "toggle" ? null : turnOn;
 
             Toggle(bottomLeft, topRight, turnOn);
 
@@ -34,20 +33,18 @@ namespace AdventOfCode.Dec6
 
         public void Toggle(Coord bottomLeft, Coord topRight, bool? turnOn = null)
         {
-            for (int x = bottomLeft.X; x <= topRight.X; x++)
+            for (var x = bottomLeft.X; x <= topRight.X; x++)
+            for (var y = bottomLeft.Y; y <= topRight.Y; y++)
             {
-                for (int y = bottomLeft.Y; y <= topRight.Y; y++)
+                var currentState = _box[y, x];
+                var desiredState = turnOn ?? !_box[y, x];
+                _box[y, x] = desiredState;
+
+                TrackLumens(x,y, turnOn);
+
+                if (currentState != desiredState)
                 {
-                    var currentState = _box[y, x];
-                    var desiredState = turnOn ?? !_box[y, x];
-                    _box[y, x] = desiredState;
-
-                    TrackLumens(x,y, turnOn);
-
-                    if (currentState != desiredState)
-                    {
-                        RecordState(y, x);
-                    }
+                    TotalLightsOn = _box[y, x] ? TotalLightsOn + 1 : TotalLightsOn - 1;
                 }
             }
         }
@@ -72,18 +69,6 @@ namespace AdventOfCode.Dec6
             {
                 _brightness[y, x]--;
                 BrightnessTracker--;
-            }
-        }
-
-        private void RecordState(int y, int x)
-        {
-            if (_box[y, x])
-            {
-                TotalLightsOn++;
-            }
-            else
-            {
-                TotalLightsOn--;
             }
         }
 
