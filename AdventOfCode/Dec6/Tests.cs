@@ -22,6 +22,7 @@ namespace AdventOfCode.Dec6
             _sut.Toggle(new Coord(0, 0), new Coord(0, 0), true);
 
             Assert.That(_sut.StatusAt(0,0), Is.EqualTo(true));
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(1));
         }
 
         [Test]
@@ -40,6 +41,67 @@ namespace AdventOfCode.Dec6
             Assert.That(_sut.StatusAt(0,2), Is.EqualTo(true));
             Assert.That(_sut.StatusAt(1,2), Is.EqualTo(true));
             Assert.That(_sut.StatusAt(2,2), Is.EqualTo(true));
+            
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(9));
+        }
+
+        [Test]
+        public void Toggle_OneLight_AddsTwoToBrightness()
+        {
+            _sut.Toggle(new Coord(0, 0), new Coord(0, 0));
+            
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Toggle_SmallGrid_WorksOutBrightness()
+        {
+            _sut.Toggle(new Coord(1, 1), new Coord(1, 5), true);
+            
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void Toggle_OneLightOff_StopsAtZero()
+        {
+            _sut.Toggle(new Coord(0, 0), new Coord(0, 0), false);
+            
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Toggle_OneOnLightOff_StopsAtZero()
+        {
+            _sut.Toggle(new Coord(0, 0), new Coord(0, 0)); // Brightness 2
+            _sut.Toggle(new Coord(0, 0), new Coord(0, 0), false); // -1
+            
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Toggle_OneOnLightOffTwice_StopsAtZero()
+        {
+            _sut.Toggle(new Coord(0, 0), new Coord(0, 0)); // Brightness 2
+            _sut.Toggle(new Coord(0, 0), new Coord(0, 0), false); // -1
+            _sut.Toggle(new Coord(0, 0), new Coord(0, 0), false); // -1
+            
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Toggle_All_AddsTwoToBrightness()
+        {
+            _sut.Toggle(new Coord(0, 0), new Coord(999, 999));
+            
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(2000000));
+        }
+
+        [Test]
+        public void Toggle_AllWithTurnOn_AddsTwoToBrightness()
+        {
+            _sut.Toggle(new Coord(0, 0), new Coord(999, 999), true);
+            
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(1000000));
         }
 
         [Test]
@@ -50,6 +112,7 @@ namespace AdventOfCode.Dec6
             _sut.Toggle(instruction);
 
             Assert.That(_sut.StatusAt(0, 0), Is.EqualTo(true));
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(1));
         }
 
         [Ignore("Slow!")]
@@ -61,6 +124,7 @@ namespace AdventOfCode.Dec6
             contents.ForEach(x => _sut.Toggle(x));
 
             Assert.That(_sut.TotalLightsOn, Is.EqualTo(569999));
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(1));
         }
 
     }
@@ -69,6 +133,7 @@ namespace AdventOfCode.Dec6
     {
         private readonly bool[,] _box;
         public int TotalLightsOn { get; private set; }
+        public int BrightnessTracker { get; private set; }
 
         public LightBox()
         {
@@ -102,11 +167,33 @@ namespace AdventOfCode.Dec6
                     var desiredState = turnOn ?? !_box[y, x];
                     _box[y, x] = desiredState;
 
+                    TrackLumens(turnOn);
+
                     if (currentState != desiredState)
                     {
                         RecordState(y, x);
                     }
                 }
+            }
+        }
+
+        private void TrackLumens(bool? turnOn)
+        {
+            if (!turnOn.HasValue)
+            {
+                BrightnessTracker += 2;
+                return;
+            }
+
+            if (turnOn.Value)
+            {
+                BrightnessTracker++;
+                return;
+            }
+
+            if (BrightnessTracker > 0)
+            {
+                BrightnessTracker--;
             }
         }
 
