@@ -58,6 +58,8 @@
     <Compile Include="Dec5\NiceFinder.cs" />
     <Compile Include="Dec5\NiceFinderTests.cs" />
     <Compile Include="Dec5\NiceFinder2Tests.cs" />
+    <Compile Include="Dec6\Coord.cs" />
+    <Compile Include="Dec6\LightBox.cs" />
     <Compile Include="Dec6\Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 
 namespace AdventOfCode.Dec6
@@ -124,106 +123,8 @@ namespace AdventOfCode.Dec6
             contents.ForEach(x => _sut.Toggle(x));
 
             Assert.That(_sut.TotalLightsOn, Is.EqualTo(569999));
-            Assert.That(_sut.BrightnessTracker, Is.EqualTo(1));
+            Assert.That(_sut.BrightnessTracker, Is.EqualTo(17836115));
         }
 
-    }
-
-    public class LightBox
-    {
-        private readonly bool[,] _box;
-        public int TotalLightsOn { get; private set; }
-        public int BrightnessTracker { get; private set; }
-
-        public LightBox()
-        {
-            _box = new bool[1000, 1000];
-        }
-
-        public void Toggle(string instruction)
-        {
-            var results = Regex.Match(instruction.Trim(), "(.*) ([0-9]+),([0-9]+) through ([0-9]+),([0-9]+)");
-
-            var bottomLeft = new Coord(int.Parse(results.Groups[2].Value), int.Parse(results.Groups[3].Value));
-            var topRight = new Coord(int.Parse(results.Groups[4].Value), int.Parse(results.Groups[5].Value));
-            bool? turnOn = results.Groups[1].Value == "turn on";
-
-            if (results.Groups[1].Value == "toggle")
-            {
-                turnOn = null;
-            }
-
-            Toggle(bottomLeft, topRight, turnOn);
-
-        }
-
-        public void Toggle(Coord bottomLeft, Coord topRight, bool? turnOn = null)
-        {
-            for (int x = bottomLeft.X; x <= topRight.X; x++)
-            {
-                for (int y = bottomLeft.Y; y <= topRight.Y; y++)
-                {
-                    var currentState = _box[y, x];
-                    var desiredState = turnOn ?? !_box[y, x];
-                    _box[y, x] = desiredState;
-
-                    TrackLumens(turnOn);
-
-                    if (currentState != desiredState)
-                    {
-                        RecordState(y, x);
-                    }
-                }
-            }
-        }
-
-        private void TrackLumens(bool? turnOn)
-        {
-            if (!turnOn.HasValue)
-            {
-                BrightnessTracker += 2;
-                return;
-            }
-
-            if (turnOn.Value)
-            {
-                BrightnessTracker++;
-                return;
-            }
-
-            if (BrightnessTracker > 0)
-            {
-                BrightnessTracker--;
-            }
-        }
-
-        private void RecordState(int y, int x)
-        {
-            if (_box[y, x])
-            {
-                TotalLightsOn++;
-            }
-            else
-            {
-                TotalLightsOn--;
-            }
-        }
-
-        public bool StatusAt(int x, int y)
-        {
-            return _box[y, x];
-        }
-    }
-
-    public struct Coord
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-
-        public Coord(int x, int y)
-        {
-            X = x;
-            Y = y;
-        }
     }
 }
