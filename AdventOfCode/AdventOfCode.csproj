@@ -75,6 +75,7 @@
     <Content Include="Dec3\Test.txt" />
     <Content Include="Dec5\Test.txt" />
     <Content Include="Dec6\Test.txt" />
+    <Content Include="Dec7\Tests.txt" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

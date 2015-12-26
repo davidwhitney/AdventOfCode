@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 
@@ -125,15 +127,13 @@ namespace AdventOfCode.Dec7
     {
         public Dictionary<string, int> Wires { get; }
 
-        public Dictionary<string, Func<Dictionary<string, int>, GroupCollection, int>> Ops = new Dictionary
-            <string, Func<Dictionary<string, int>, GroupCollection, int>>
+        private static readonly Dictionary<string, Func<int, int, int>> Bitwise = new Dictionary
+            <string, Func<int, int, int>>
         {
-            {"([0-9]+)", (w, input) => int.Parse(input[1].Value)},
-            {"([a-z]+) AND ([a-z]+)", (w, input) => w[input[1].Value] & w[input[2].Value]},
-            {"([a-z]+) OR ([a-z]+)", (w, input) => w[input[1].Value] | w[input[2].Value]},
-            {"([a-z]+) LSHIFT ([0-9]+)", (w, input) => w[input[1].Value] << int.Parse(input[2].Value)},
-            {"([a-z]+) RSHIFT ([0-9]+)", (w, input) => w[input[1].Value] >> int.Parse(input[2].Value)},
-            {"NOT ([a-z]+)", (w, input) => 65535 - w[input[1].Value]},
+            {"AND", (x, y) => x & y},
+            {"OR", (x, y) => x | y},
+            {"LSHIFT", (x, y) => x << y},
+            {"RSHIFT", (x, y) => x >> y},
         };
 
         public Circuit(Dictionary<string, int> wires = null)
@@ -147,17 +147,41 @@ namespace AdventOfCode.Dec7
             var operation = parts[0].Trim();
             var target = parts[1].Trim();
 
-            foreach (var pattern in Ops)
+            var assignment = Regex.Match(operation, "^([0-9a-z]+)$");
+            if (assignment.Success)
             {
-                var supported = Regex.Match(operation, "^" + pattern.Key + "$");
-                if (supported.Success)
-                {
-                    var val = pattern.Value(Wires, supported.Groups);
-                    Wires[target] = val;
-                    break;
-                }
+                Wires[target] = int.Parse(assignment.Groups[1].Value);
+                return;
+            }
+
+            var negation = Regex.Match(operation, "^NOT (.+)$");
+            if (negation.Success)
+            {
+                Wires[target] = 65535 - Wires[negation.Groups[1].Value];
+                return;
+            }
+
+            var bitwiseOperation = Regex.Match(operation, "^(.+) (AND|OR|LSHIFT|RSHIFT) (.+)$");
+            if (bitwiseOperation.Success)
+            {
+                var first = ValOrInt(Wires, bitwiseOperation.Groups[1].Value);
+                var gate = bitwiseOperation.Groups[2].Value;
+                var second = ValOrInt(Wires, bitwiseOperation.Groups[3].Value);
+
+                Wires[target] = Bitwise[gate](first, second);
             }
         }
+
+        private static int ValOrInt(IReadOnlyDictionary<string, int> w, string input)
+        {
+            int asInt;
+            if (int.TryParse(input, out asInt))
+            {
+                return asInt;
+            }
+            return w[input];
+        }
+        
 
         public void Parse(IEnumerable<string> instructions)
         {
