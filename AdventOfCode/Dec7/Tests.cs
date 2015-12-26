@@ -92,6 +92,38 @@ namespace AdventOfCode.Dec7
             
             Assert.That(_sut.Wires['z'], Is.EqualTo(-1));
         }
+
+        [Test]
+        public void Example1()
+        {
+            var instructions = new List<string>
+            {
+                "123 -> x",
+                "456 -> y",
+                "x AND y -> d",
+                "x OR y -> e",
+                "x LSHIFT 2 -> f",
+                "y RSHIFT 2 -> g",
+                "NOT x -> h",
+                "NOT y -> i"
+            };
+
+            foreach (var instruction in instructions)
+            {
+                _sut.Parse(instruction);
+            }
+
+            Assert.That(_sut.Wires['d'], Is.EqualTo(72));
+            Assert.That(_sut.Wires['e'], Is.EqualTo(507));
+            Assert.That(_sut.Wires['f'], Is.EqualTo(492));
+            Assert.That(_sut.Wires['g'], Is.EqualTo(114));
+            Assert.That(_sut.Wires['x'], Is.EqualTo(123));
+            Assert.That(_sut.Wires['y'], Is.EqualTo(456));
+            
+            // NOTs
+            Assert.That(_sut.Wires['h'], Is.EqualTo(65412));
+            Assert.That(_sut.Wires['i'], Is.EqualTo(65079));
+        }
     }
 
     public class Circuit
