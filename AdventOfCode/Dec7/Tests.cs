@@ -131,7 +131,7 @@ namespace AdventOfCode.Dec7
 
             _sut.Parse(contents);
 
-            Assert.That(_sut.Wires["a"], Is.EqualTo(100));
+            Assert.That(_sut.Wires["a"], Is.EqualTo(16076));
         }
     }
 
@@ -160,22 +160,42 @@ namespace AdventOfCode.Dec7
 
         public void Parse(IEnumerable<string> instructions)
         {
-            foreach (var instruction in instructions)
+            var instructionQueue = new Queue<string>(instructions);
+
+            do
             {
-                var parts = instruction.Split(new[] { "->" }, StringSplitOptions.RemoveEmptyEntries);
+                var ins = instructionQueue.Dequeue();
+
+                var parts = ins.Split(new[] { "->" }, StringSplitOptions.RemoveEmptyEntries);
                 var operation = parts[0].Trim();
                 var target = parts[1].Trim();
 
                 var assignment = Regex.Match(operation, "^([0-9a-z]+)$");
                 if (assignment.Success)
                 {
-                    Wires[target] = int.Parse(assignment.Groups[1].Value);
+                    var first = ValOrInt(assignment.Groups[1].Value);
+                    if (first == null)
+                    {
+                        // Dependencies not satisfied requeue
+                        instructionQueue.Enqueue(ins);
+                        continue;
+                    }
+
+                    Wires[target] = first.Value;
                     continue;
                 }
 
                 var negation = Regex.Match(operation, "^NOT (.+)$");
                 if (negation.Success)
                 {
+                    var first = ValOrInt(negation.Groups[1].Value);
+                    if (first == null)
+                    {
+                        // Dependencies not satisfied requeue
+                        instructionQueue.Enqueue(ins);
+                        continue;
+                    }
+
                     Wires[target] = 65535 - Wires[negation.Groups[1].Value];
                     continue;
                 }
@@ -187,9 +207,18 @@ namespace AdventOfCode.Dec7
                     var gate = bitwiseOperation.Groups[2].Value;
                     var second = ValOrInt(bitwiseOperation.Groups[3].Value);
 
+                    if (first == null || second == null)
+                    {
+                        // Dependencies not satisfied requeue
+                        instructionQueue.Enqueue(ins);
+                        continue;
+                    }
+
                     Wires[target] = Bitwise[gate](first.Value, second.Value);
                 }
-            }
+
+            } while (instructionQueue.Count > 0);
+
         }
 
         private int? ValOrInt(string input)
@@ -205,7 +234,7 @@ namespace AdventOfCode.Dec7
                 return Wires[input];
             }
 
-            return 0;
+            return null;
         }
     }
 }
