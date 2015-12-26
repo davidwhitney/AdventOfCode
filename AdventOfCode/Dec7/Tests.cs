@@ -125,6 +125,7 @@ namespace AdventOfCode.Dec7
         }
 
         [Test]
+        [Ignore("Slow")]
         public void DoChallange()
         {
             var contents = File.ReadLines("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec7\\Tests.txt").ToList();
@@ -132,6 +133,17 @@ namespace AdventOfCode.Dec7
             _sut.Parse(contents);
 
             Assert.That(_sut.Wires["a"], Is.EqualTo(16076));
+        }
+
+        [Test]
+        [Ignore("Slow")]
+        public void DoChallange2()
+        {
+            var contents = File.ReadLines("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec7\\Tests2.txt").ToList();
+
+            _sut.Parse(contents);
+
+            Assert.That(_sut.Wires["a"], Is.EqualTo(2797));
         }
     }
 
