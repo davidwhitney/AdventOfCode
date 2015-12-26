@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -121,6 +123,16 @@ namespace AdventOfCode.Dec7
             Assert.That(_sut.Wires["x"], Is.EqualTo(123));
             Assert.That(_sut.Wires["y"], Is.EqualTo(456));
         }
+
+        [Test]
+        public void DoChallange()
+        {
+            var contents = File.ReadLines("c:\\dev\\AdventOfCode\\AdventOfCode\\Dec7\\Tests.txt").ToList();
+
+            _sut.Parse(contents);
+
+            Assert.That(_sut.Wires["a"], Is.EqualTo(100));
+        }
     }
 
     public class Circuit
@@ -164,22 +176,22 @@ namespace AdventOfCode.Dec7
             var bitwiseOperation = Regex.Match(operation, "^(.+) (AND|OR|LSHIFT|RSHIFT) (.+)$");
             if (bitwiseOperation.Success)
             {
-                var first = ValOrInt(Wires, bitwiseOperation.Groups[1].Value);
+                var first = ValOrInt(bitwiseOperation.Groups[1].Value);
                 var gate = bitwiseOperation.Groups[2].Value;
-                var second = ValOrInt(Wires, bitwiseOperation.Groups[3].Value);
+                var second = ValOrInt(bitwiseOperation.Groups[3].Value);
 
                 Wires[target] = Bitwise[gate](first, second);
             }
         }
 
-        private static int ValOrInt(IReadOnlyDictionary<string, int> w, string input)
+        private int ValOrInt(string input)
         {
             int asInt;
             if (int.TryParse(input, out asInt))
             {
                 return asInt;
             }
-            return w[input];
+            return Wires[input];
         }
         
 
