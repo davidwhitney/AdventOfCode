@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 
@@ -52,11 +53,34 @@ namespace AdventOfCode.Dec7
 
             Assert.That(_sut.Wires['z'], Is.EqualTo(result));
         }
+
+        [TestCase(23, 1, 11)]
+        public void RshiftProvidedInText_PerformsLeftshift_SetsThirdValue(int bit1, int shiftBy, int result)
+        {
+            _sut = new Circuit(new Dictionary<char, int>
+            {
+                {'a', bit1}
+            });
+
+            _sut.Parse($"a RSHIFT {shiftBy} -> z");
+
+            Assert.That(_sut.Wires['z'], Is.EqualTo(result));
+        }
     }
 
     public class Circuit
     {
         public Dictionary<char, int> Wires { get; }
+
+        public Dictionary<string, Func<Dictionary<char, int>, GroupCollection, int>> Ops = new Dictionary
+            <string, Func<Dictionary<char, int>, GroupCollection, int>>
+        {
+            {"([0-9]+)", (w, input) => int.Parse(input[1].Value)},
+            {"([a-z]+) AND ([a-z]+)", (w, input) => w[input[1].Value[0]] & w[input[2].Value[0]]},
+            {"([a-z]+) OR ([a-z]+)", (w, input) => w[input[1].Value[0]] | w[input[2].Value[0]]},
+            {"([a-z]+) LSHIFT ([0-9]+)", (w, input) => w[input[1].Value[0]] << int.Parse(input[2].Value)},
+            {"([a-z]+) RSHIFT ([0-9]+)", (w, input) => w[input[1].Value[0]] >> int.Parse(input[2].Value)},
+        };
 
         public Circuit(Dictionary<char, int> wires = null)
         {
@@ -65,29 +89,18 @@ namespace AdventOfCode.Dec7
 
         public void Parse(string instruction)
         {
-            var assignment = Regex.Match(instruction, "([0-9]+) -> ([a-z]+)");
-            if (assignment.Success)
+            var parts = instruction.Split(new[] {"->"}, StringSplitOptions.RemoveEmptyEntries);
+            var operation = parts[0].Trim();
+            var target = parts[1].Trim()[0];
+
+            foreach (var pattern in Ops)
             {
-                Wires[assignment.Groups[2].Value[0]] = int.Parse(assignment.Groups[1].Value);
-            }
-
-            var bitwiseAnd = Regex.Match(instruction, "([a-z]+) (AND|OR) ([a-z]+) -> ([a-z]+)");
-            var op = bitwiseAnd.Groups[2].Value;
-
-            if (bitwiseAnd.Success)
-            {
-                var firstRegister = bitwiseAnd.Groups[1].Value[0];
-                var secondRegister = bitwiseAnd.Groups[3].Value[0];
-                var targetRegister = bitwiseAnd.Groups[4].Value[0];
-
-                if (op == "AND")
+                var supported = Regex.Match(operation, "^" + pattern.Key + "$");
+                if (supported.Success)
                 {
-                    Wires[targetRegister] = Wires[firstRegister] & Wires[secondRegister];
-                }
-
-                if (op == "OR")
-                {
-                    Wires[targetRegister] = Wires[firstRegister] | Wires[secondRegister];
+                    var val = pattern.Value(Wires, supported.Groups);
+                    Wires[target] = val;
+                    break;
                 }
             }
         }
