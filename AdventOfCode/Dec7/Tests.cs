@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 
@@ -182,58 +180,81 @@ namespace AdventOfCode.Dec7
                 var operation = parts[0].Trim();
                 var target = parts[1].Trim();
 
-                var assignment = Regex.Match(operation, "^([0-9a-z]+)$");
-                if (assignment.Success)
+                if (!Assigment(operation, instructionQueue, ins, target))
                 {
-                    var first = ValOrInt(assignment.Groups[1].Value);
-                    if (first == null)
-                    {
-                        // Dependencies not satisfied requeue
-                        instructionQueue.Enqueue(ins);
-                        continue;
-                    }
-
-                    Wires[target] = first.Value;
                     continue;
                 }
 
-                var negation = Regex.Match(operation, "^NOT (.+)$");
-                if (negation.Success)
+                if (!Negation(operation, instructionQueue, ins, target))
                 {
-                    var first = ValOrInt(negation.Groups[1].Value);
-                    if (first == null)
-                    {
-                        // Dependencies not satisfied requeue
-                        instructionQueue.Enqueue(ins);
-                        continue;
-                    }
-
-                    Wires[target] = 65535 - Wires[negation.Groups[1].Value];
                     continue;
                 }
 
-                var bitwiseOperation = Regex.Match(operation, "^(.+) (AND|OR|LSHIFT|RSHIFT) (.+)$");
-                if (bitwiseOperation.Success)
-                {
-                    var first = ValOrInt(bitwiseOperation.Groups[1].Value);
-                    var gate = bitwiseOperation.Groups[2].Value;
-                    var second = ValOrInt(bitwiseOperation.Groups[3].Value);
-
-                    if (first == null || second == null)
-                    {
-                        // Dependencies not satisfied requeue
-                        instructionQueue.Enqueue(ins);
-                        continue;
-                    }
-
-                    Wires[target] = Bitwise[gate](first.Value, second.Value);
-                }
+                BitwiseOp(operation, instructionQueue, ins, target);
 
             } while (instructionQueue.Count > 0);
 
         }
 
-        private int? ValOrInt(string input)
+        private void BitwiseOp(string operation, Queue<string> instructionQueue, string ins, string target)
+        {
+            var bitwiseOperation = Regex.Match(operation, "^(.+) (AND|OR|LSHIFT|RSHIFT) (.+)$");
+            if (bitwiseOperation.Success)
+            {
+                var source1 = RegisteredValueOrInteger(bitwiseOperation.Groups[1].Value);
+                var gate = bitwiseOperation.Groups[2].Value;
+                var source2 = RegisteredValueOrInteger(bitwiseOperation.Groups[3].Value);
+
+                if (source1 == null || source2 == null)
+                {
+                    // Dependencies not satisfied requeue
+                    instructionQueue.Enqueue(ins);
+                    return;
+                }
+
+                Wires[target] = Bitwise[gate](source1.Value, source2.Value);
+            }
+        }
+
+        private bool Negation(string operation, Queue<string> instructionQueue, string ins, string target)
+        {
+            var negation = Regex.Match(operation, "^NOT (.+)$");
+            if (negation.Success)
+            {
+                var source = RegisteredValueOrInteger(negation.Groups[1].Value);
+                if (source == null)
+                {
+                    // Dependencies not satisfied requeue
+                    instructionQueue.Enqueue(ins);
+                    return false;
+                }
+
+                Wires[target] = 65535 - source.Value;
+                return false;
+            }
+            return true;
+        }
+
+        private bool Assigment(string operation, Queue<string> instructionQueue, string ins, string target)
+        {
+            var assignment = Regex.Match(operation, "^([0-9a-z]+)$");
+            if (assignment.Success)
+            {
+                var source = RegisteredValueOrInteger(assignment.Groups[1].Value);
+                if (source == null)
+                {
+                    // Dependencies not satisfied requeue
+                    instructionQueue.Enqueue(ins);
+                    return false;
+                }
+
+                Wires[target] = source.Value;
+                return false;
+            }
+            return true;
+        }
+
+        private int? RegisteredValueOrInteger(string input)
         {
             int asInt;
             if (int.TryParse(input, out asInt))
