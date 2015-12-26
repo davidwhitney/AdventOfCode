@@ -143,27 +143,27 @@ namespace AdventOfCode.Dec7
 
         public void Parse(string instruction)
         {
-            Parse(new[] {instruction});
+            var parts = instruction.Split(new[] {"->"}, StringSplitOptions.RemoveEmptyEntries);
+            var operation = parts[0].Trim();
+            var target = parts[1].Trim()[0];
+
+            foreach (var pattern in Ops)
+            {
+                var supported = Regex.Match(operation, "^" + pattern.Key + "$");
+                if (supported.Success)
+                {
+                    var val = pattern.Value(Wires, supported.Groups);
+                    Wires[target] = val;
+                    break;
+                }
+            }
         }
 
         public void Parse(IEnumerable<string> instructions)
         {
             foreach (var instruction in instructions)
             {
-                var parts = instruction.Split(new[] {"->"}, StringSplitOptions.RemoveEmptyEntries);
-                var operation = parts[0].Trim();
-                var target = parts[1].Trim()[0];
-
-                foreach (var pattern in Ops)
-                {
-                    var supported = Regex.Match(operation, "^" + pattern.Key + "$");
-                    if (supported.Success)
-                    {
-                        var val = pattern.Value(Wires, supported.Groups);
-                        Wires[target] = val;
-                        break;
-                    }
-                }
+                Parse(instruction);
             }
         }
     }
