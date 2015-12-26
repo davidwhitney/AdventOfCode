@@ -79,6 +79,19 @@ namespace AdventOfCode.Dec7
 
             Assert.That(_sut.Wires['z'], Is.EqualTo(result));
         }
+
+        [Test]
+        public void Not_PerformsInversion_SetsThirdValue()
+        {
+            _sut = new Circuit(new Dictionary<char, int>
+            {
+                {'a', 1}
+            });
+
+            _sut.Parse("NOT a -> z");
+            
+            Assert.That(_sut.Wires['z'], Is.EqualTo(-1));
+        }
     }
 
     public class Circuit
@@ -93,6 +106,7 @@ namespace AdventOfCode.Dec7
             {"([a-z]+) OR ([a-z]+)", (w, input) => w[input[1].Value[0]] | w[input[2].Value[0]]},
             {"([a-z]+) LSHIFT ([0-9]+)", (w, input) => w[input[1].Value[0]] << int.Parse(input[2].Value)},
             {"([a-z]+) RSHIFT ([0-9]+)", (w, input) => w[input[1].Value[0]] >> int.Parse(input[2].Value)},
+            {"NOT ([a-z]+)", (w, input) => w[input[1].Value[0]] * -1},
         };
 
         public Circuit(Dictionary<char, int> wires = null)
