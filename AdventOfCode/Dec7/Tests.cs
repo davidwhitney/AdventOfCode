@@ -155,52 +155,57 @@ namespace AdventOfCode.Dec7
 
         public void Parse(string instruction)
         {
-            var parts = instruction.Split(new[] {"->"}, StringSplitOptions.RemoveEmptyEntries);
-            var operation = parts[0].Trim();
-            var target = parts[1].Trim();
+            Parse(new[] {instruction});
+        }
 
-            var assignment = Regex.Match(operation, "^([0-9a-z]+)$");
-            if (assignment.Success)
+        public void Parse(IEnumerable<string> instructions)
+        {
+            foreach (var instruction in instructions)
             {
-                Wires[target] = int.Parse(assignment.Groups[1].Value);
-                return;
-            }
+                var parts = instruction.Split(new[] { "->" }, StringSplitOptions.RemoveEmptyEntries);
+                var operation = parts[0].Trim();
+                var target = parts[1].Trim();
 
-            var negation = Regex.Match(operation, "^NOT (.+)$");
-            if (negation.Success)
-            {
-                Wires[target] = 65535 - Wires[negation.Groups[1].Value];
-                return;
-            }
+                var assignment = Regex.Match(operation, "^([0-9a-z]+)$");
+                if (assignment.Success)
+                {
+                    Wires[target] = int.Parse(assignment.Groups[1].Value);
+                    continue;
+                }
 
-            var bitwiseOperation = Regex.Match(operation, "^(.+) (AND|OR|LSHIFT|RSHIFT) (.+)$");
-            if (bitwiseOperation.Success)
-            {
-                var first = ValOrInt(bitwiseOperation.Groups[1].Value);
-                var gate = bitwiseOperation.Groups[2].Value;
-                var second = ValOrInt(bitwiseOperation.Groups[3].Value);
+                var negation = Regex.Match(operation, "^NOT (.+)$");
+                if (negation.Success)
+                {
+                    Wires[target] = 65535 - Wires[negation.Groups[1].Value];
+                    continue;
+                }
 
-                Wires[target] = Bitwise[gate](first, second);
+                var bitwiseOperation = Regex.Match(operation, "^(.+) (AND|OR|LSHIFT|RSHIFT) (.+)$");
+                if (bitwiseOperation.Success)
+                {
+                    var first = ValOrInt(bitwiseOperation.Groups[1].Value);
+                    var gate = bitwiseOperation.Groups[2].Value;
+                    var second = ValOrInt(bitwiseOperation.Groups[3].Value);
+
+                    Wires[target] = Bitwise[gate](first.Value, second.Value);
+                }
             }
         }
 
-        private int ValOrInt(string input)
+        private int? ValOrInt(string input)
         {
             int asInt;
             if (int.TryParse(input, out asInt))
             {
                 return asInt;
             }
-            return Wires[input];
-        }
-        
 
-        public void Parse(IEnumerable<string> instructions)
-        {
-            foreach (var instruction in instructions)
+            if (Wires.ContainsKey(input))
             {
-                Parse(instruction);
+                return Wires[input];
             }
+
+            return 0;
         }
     }
 }
