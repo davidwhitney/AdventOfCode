@@ -55,7 +55,7 @@ namespace AdventOfCode.Dec7
         }
 
         [TestCase(23, 1, 11)]
-        public void RshiftProvidedInText_PerformsLeftshift_SetsThirdValue(int bit1, int shiftBy, int result)
+        public void RshiftProvidedInText_PerformsRightshift_SetsThirdValue(int bit1, int shiftBy, int result)
         {
             _sut = new Circuit(new Dictionary<char, int>
             {
@@ -63,6 +63,19 @@ namespace AdventOfCode.Dec7
             });
 
             _sut.Parse($"a RSHIFT {shiftBy} -> z");
+
+            Assert.That(_sut.Wires['z'], Is.EqualTo(result));
+        }
+
+        [TestCase(14, 2, 56)]
+        public void LshiftProvidedInText_PerformsLeftshift_SetsThirdValue(int bit1, int shiftBy, int result)
+        {
+            _sut = new Circuit(new Dictionary<char, int>
+            {
+                {'a', bit1}
+            });
+
+            _sut.Parse($"a LSHIFT {shiftBy} -> z");
 
             Assert.That(_sut.Wires['z'], Is.EqualTo(result));
         }
