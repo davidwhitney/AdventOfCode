@@ -85,12 +85,12 @@ namespace AdventOfCode.Dec7
         {
             _sut = new Circuit(new Dictionary<char, int>
             {
-                {'a', 1}
+                {'a', 7}
             });
 
             _sut.Parse("NOT a -> z");
             
-            Assert.That(_sut.Wires['z'], Is.EqualTo(-1));
+            Assert.That(_sut.Wires['z'], Is.EqualTo(65528));
         }
 
         [Test]
@@ -108,21 +108,16 @@ namespace AdventOfCode.Dec7
                 "NOT y -> i"
             };
 
-            foreach (var instruction in instructions)
-            {
-                _sut.Parse(instruction);
-            }
+            _sut.Parse(instructions);
 
             Assert.That(_sut.Wires['d'], Is.EqualTo(72));
             Assert.That(_sut.Wires['e'], Is.EqualTo(507));
             Assert.That(_sut.Wires['f'], Is.EqualTo(492));
             Assert.That(_sut.Wires['g'], Is.EqualTo(114));
-            Assert.That(_sut.Wires['x'], Is.EqualTo(123));
-            Assert.That(_sut.Wires['y'], Is.EqualTo(456));
-            
-            // NOTs
             Assert.That(_sut.Wires['h'], Is.EqualTo(65412));
             Assert.That(_sut.Wires['i'], Is.EqualTo(65079));
+            Assert.That(_sut.Wires['x'], Is.EqualTo(123));
+            Assert.That(_sut.Wires['y'], Is.EqualTo(456));
         }
     }
 
@@ -138,7 +133,7 @@ namespace AdventOfCode.Dec7
             {"([a-z]+) OR ([a-z]+)", (w, input) => w[input[1].Value[0]] | w[input[2].Value[0]]},
             {"([a-z]+) LSHIFT ([0-9]+)", (w, input) => w[input[1].Value[0]] << int.Parse(input[2].Value)},
             {"([a-z]+) RSHIFT ([0-9]+)", (w, input) => w[input[1].Value[0]] >> int.Parse(input[2].Value)},
-            {"NOT ([a-z]+)", (w, input) => w[input[1].Value[0]] * -1},
+            {"NOT ([a-z]+)", (w, input) => 65535 - w[input[1].Value[0]]},
         };
 
         public Circuit(Dictionary<char, int> wires = null)
@@ -148,18 +143,26 @@ namespace AdventOfCode.Dec7
 
         public void Parse(string instruction)
         {
-            var parts = instruction.Split(new[] {"->"}, StringSplitOptions.RemoveEmptyEntries);
-            var operation = parts[0].Trim();
-            var target = parts[1].Trim()[0];
+            Parse(new[] {instruction});
+        }
 
-            foreach (var pattern in Ops)
+        public void Parse(IEnumerable<string> instructions)
+        {
+            foreach (var instruction in instructions)
             {
-                var supported = Regex.Match(operation, "^" + pattern.Key + "$");
-                if (supported.Success)
+                var parts = instruction.Split(new[] {"->"}, StringSplitOptions.RemoveEmptyEntries);
+                var operation = parts[0].Trim();
+                var target = parts[1].Trim()[0];
+
+                foreach (var pattern in Ops)
                 {
-                    var val = pattern.Value(Wires, supported.Groups);
-                    Wires[target] = val;
-                    break;
+                    var supported = Regex.Match(operation, "^" + pattern.Key + "$");
+                    if (supported.Success)
+                    {
+                        var val = pattern.Value(Wires, supported.Groups);
+                        Wires[target] = val;
+                        break;
+                    }
                 }
             }
         }
