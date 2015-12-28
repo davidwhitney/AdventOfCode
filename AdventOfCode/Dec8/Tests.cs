@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -23,7 +24,8 @@ namespace AdventOfCode.Dec8
         [TestCase("\"abc\"", 3)]
         [TestCase("abc", 3)]
         [TestCase("\"\"", 0)]
-        [TestCase("aaa\\\"aaa", 7)]
+        [TestCase(@"aaa\""aaa", 7)]
+        [TestCase(@"""aaa\""aaa""", 7)]
         [TestCase("\"", 0)]
         [TestCase("\\x27", 1)]
         [TestCase("a b", 2)]
@@ -40,6 +42,26 @@ namespace AdventOfCode.Dec8
         public int CountActualCharacters(string original)
         {
             var copy = new string(original.ToCharArray());
+
+
+            copy = ReplaceHex(copy);
+
+            var specials = new List<char>
+            {
+                '\"',
+                ' ',
+            };
+
+            var specCount = 0;
+            foreach (var ch in copy)
+            {
+                if (specials.Contains(ch))
+                {
+                    specCount++;
+                }
+            }
+
+            return copy.Length - specCount;
 
             copy = ReplaceHex(copy);
             copy = copy.Replace("\"", "^");
