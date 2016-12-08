@@ -15,11 +15,13 @@ namespace AoC
         [Test]
         public void Sample()
         {
-            var instructions = new List<string>();
-            instructions.Add("rect 3x2");
-            instructions.Add("rotate column x=1 by 1");
-            instructions.Add("rotate row y=0 by 4");
-            instructions.Add("rotate column x=1 by 1");
+            var instructions = new List<string>
+            {
+                "rect 3x2",
+                "rotate column x=1 by 1",
+                "rotate row y=0 by 4",
+                "rotate column x=1 by 1"
+            };
 
             var screen = new Screen(7, 3);
             screen.Process(instructions);
@@ -40,6 +42,12 @@ namespace AoC
 ....
 ....
 ....".TrimStart()));
+        }
+
+        [Test]
+        public void Test()
+        {
+            var screen = new Screen(50, 6);
         }
     }
 
