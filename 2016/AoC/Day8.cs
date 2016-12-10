@@ -97,7 +97,7 @@ namespace AoC
             }
         }
 
-        private void Fill(int objGroup, int mGroup)
+        private void Fill(int x, int y)
         {
         }
 
