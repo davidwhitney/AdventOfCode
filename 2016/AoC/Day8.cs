@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Text.RegularExpressions;
 using AoC.Infrastructure;
 using NUnit.Framework;
 
@@ -45,6 +43,21 @@ namespace AoC
         }
 
         [Test]
+        public void Process_CreateInstruction_Creates()
+        {
+            var screen = new Screen(7, 3);
+            screen.Process(new List<string>
+            {
+                "rect 3x2"
+            });
+
+            Assert.That(screen.ToString(), Is.EqualTo(@"
+###....
+###....
+.......".TrimStart()));
+        }
+
+        [Test]
         public void Test()
         {
             var screen = new Screen(50, 6);
@@ -66,7 +79,27 @@ namespace AoC
 
         public void Process(List<string> instructions)
         {
-            throw new NotImplementedException();}
+            var ops = new Dictionary<string, Action<Match>>
+            {
+                {@"rect ([0-9]+)x([0-9]+)", m => Fill(int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value))}
+            };
+
+            foreach (var instruction in instructions)
+            {
+                foreach (var op in ops)
+                {
+                    var matches = Regex.Matches(instruction, op.Key, RegexOptions.Compiled);
+                    if (matches.Count > 0)
+                    {
+                        op.Value(matches[0]);
+                    }
+                }
+            }
+        }
+
+        private void Fill(int objGroup, int mGroup)
+        {
+        }
 
         public override string ToString()
         {
