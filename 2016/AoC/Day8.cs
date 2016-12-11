@@ -109,6 +109,7 @@ namespace AoC
             screen.Process(Input.ToList());
 
             Assert.That(screen.PixelsIlluminated, Is.EqualTo(128));
+            Console.WriteLine(screen.ToString(" "));
         }
     }
 
@@ -186,10 +187,15 @@ namespace AoC
 
         public override string ToString()
         {
+            return ToString(".");
+        }
+
+        public string ToString(string empty)
+        {
             var buffer = new StringBuilder();
             foreach (var row in _storage)
             {
-                buffer.AppendLine(string.Join("", row));
+                buffer.AppendLine(string.Join("", row).Replace(".", empty));
             }
             return buffer.ToString().Trim();
         }
