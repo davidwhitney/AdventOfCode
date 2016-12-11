@@ -59,6 +59,18 @@ namespace AoC
         }
 
         [Test]
+        public void PixelsIlluminated_ReturnsCorrectCount()
+        {
+            var screen = new Screen(7, 3);
+            screen.Process(new List<string>
+            {
+                "rect 3x2"
+            });
+
+            Assert.That(screen.PixelsIlluminated, Is.EqualTo(6));
+        }
+
+        [Test]
         public void Process_RotateX_Shifts()
         {
             var screen = new Screen(7, 3);
@@ -94,12 +106,16 @@ namespace AoC
         public void Test()
         {
             var screen = new Screen(50, 6);
+            screen.Process(Input.ToList());
+
+            Assert.That(screen.PixelsIlluminated, Is.EqualTo(128));
         }
     }
 
     public class Screen
     {
         private readonly List<List<char>> _storage;
+        public int PixelsIlluminated => _storage.Sum(row => row.Count(x => x == '#'));
 
         public Screen(int x, int y)
         {
