@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -41,9 +45,19 @@ namespace AoC
             Assert.That(result.Decompressed.Length, Is.EqualTo(74532));
         }
 
+        [Test]
+        public void Test2()
+        {
+            var result = _compressor.PredictLength2(string.Join("", Input));
+
+            Assert.That(result, Is.EqualTo(11558231665));
+        }
+
         [TestCase("XYZ", 3)]
         [TestCase("(3x3)XYZ", 9)]
         [TestCase("X(8x2)(3x3)ABCY", 20)]
+        [TestCase("(27x12)(20x12)(13x14)(7x10)(1x12)A", 241920)]
+        [TestCase("(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN", 445)]
         public void Test2(string compressed, int length)
         {
             var lengthPrediction = _compressor.PredictLength2(compressed);
@@ -99,45 +113,56 @@ namespace AoC
             return new Body(compressed, buffer.ToString());
         }
 
-        public int PredictLength2(string compressed)
+        public long PredictLength2(string compressed)
         {
-            var inputTokens = compressed.Split(new[] {'(', ')'}, StringSplitOptions.RemoveEmptyEntries).ToList();
-            var exRg = new Regex(@"([0-9]+)x([0-9]+)");
-            var tokes = new List<Token>();
+            var stackOfCharacters = new Stack<char>(compressed.Reverse());
 
-            foreach (var input in inputTokens)
+            long count = CountSequence(stackOfCharacters);
+
+            return count;
+        }
+
+        private static long CountSequence(Stack<char> stackOfCharacters, int? maxCapture = null)
+        {
+            long count = 0;
+            var iterations = 0;
+            var maxCharsToCount = maxCapture.GetValueOrDefault(int.MaxValue);
+
+            while (stackOfCharacters.Any() && maxCharsToCount > iterations++)
             {
-                var thisToke = exRg.IsMatch(input)
-                    ? (Token) new ExpressionToken(input)
-                    : new LiteralToken(input);
-
-                var lastOrDefault = tokes.LastOrDefault();
-
-                if (lastOrDefault is ExpressionToken
-                    && thisToke is LiteralToken)
+                var ch = stackOfCharacters.Pop();
+                if (ch != '(')
                 {
-                    var et = lastOrDefault as ExpressionToken;
-                    var t1 = new LiteralToken(input.Substring(0, et.SequenceLength));
-                    var t2 = new LiteralToken(input.Substring(et.SequenceLength, input.Length - et.SequenceLength));
-                    lastOrDefault.SetNext(t1);
-                    t1.SetNext(t2);
-                    tokes.Add(t1);
-                    tokes.Add(t2);
+                    count++;
+                    continue;
                 }
-                else
-                {
-                    lastOrDefault?.SetNext(thisToke);
-                    tokes.Add(thisToke);
-                }
+
+                var capture = new ExpressionToken(CaptureExpression(stackOfCharacters));
+                iterations += capture.ValueLength - 1;
+
+                var multiplicationFactor = capture.MultiplyBy;
+                var captureCharacters = capture.SequenceLength;
+
+                var countSequence = CountSequence(stackOfCharacters, captureCharacters);
+                iterations += captureCharacters;
+
+                var expandedCount = countSequence*multiplicationFactor;
+                count += expandedCount;
             }
 
-            int length = 0;
-            foreach (var token in tokes)
+            return count;
+        }
+
+        private static string CaptureExpression(Stack<char> stackOfCharacters)
+        {
+            var op = new StringBuilder();
+            while (!op.ToString().EndsWith(")") && stackOfCharacters.Any())
             {
-                length += token.ComputedLength();
+                op.Append(stackOfCharacters.Pop());
             }
-            
-            return length;
+
+            var token = op.ToString().Remove(op.ToString().Length - 1);
+            return token;
         }
     }
 
@@ -150,45 +175,26 @@ namespace AoC
             {
                 var matches = expanderRegex.Matches(value)[0];
                 SequenceLength = int.Parse(matches.Groups[1].Value);
-                PrintDuration = int.Parse(matches.Groups[2].Value);
+                MultiplyBy = int.Parse(matches.Groups[2].Value);
             }
         }
 
         public int SequenceLength { get; }
-        public int PrintDuration { get; }
-
-        public override int ComputedLength() => ComputeLength();
-
-        private int ComputeLength()
-        {
-            return Next.ComputedLength() * (PrintDuration - 1);
-        }
+        public int MultiplyBy { get; }
+        
+        public override int ValueLength => Value.Length + 2;
     }
-
-
-    public class LiteralToken : Token
-    {
-        public LiteralToken(string value) : base(value)
-        {
-        }
-
-        public override int ComputedLength() => Value.Length;
-    }
+    
 
     public abstract class Token
     {
-        public Token Next { get; set; }
+        public Token Captured { get; set; }
         public string Value { get; set; }
-        public abstract int ComputedLength();
+        public abstract int ValueLength { get; }
 
         protected Token(string value)
         {
             Value = value;
-        }
-
-        public void SetNext(Token t)
-        {
-            Next = t;
         }
     }
 
