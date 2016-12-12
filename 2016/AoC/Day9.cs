@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using AoC.Infrastructure;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace AoC
 {
@@ -116,10 +109,7 @@ namespace AoC
         public long PredictLength2(string compressed)
         {
             var stackOfCharacters = new Stack<char>(compressed.Reverse());
-
-            long count = CountSequence(stackOfCharacters);
-
-            return count;
+            return CountSequence(stackOfCharacters);
         }
 
         private static long CountSequence(Stack<char> stackOfCharacters, int? maxCapture = null)
@@ -161,15 +151,20 @@ namespace AoC
                 op.Append(stackOfCharacters.Pop());
             }
 
-            var token = op.ToString().Remove(op.ToString().Length - 1);
-            return token;
+            return op.ToString().Remove(op.ToString().Length - 1);
         }
     }
 
-    public class ExpressionToken : Token
+    public class ExpressionToken
     {
-        public ExpressionToken(string value) : base(value)
+        public string Value { get; set; }
+        public int SequenceLength { get; }
+        public int MultiplyBy { get; }
+        public int ValueLength => Value.Length + 2;
+
+        public ExpressionToken(string value)
         {
+            Value = value;
             var expanderRegex = new Regex(@"([0-9]+)x([0-9]+)");
             if (expanderRegex.IsMatch(value))
             {
@@ -178,25 +173,8 @@ namespace AoC
                 MultiplyBy = int.Parse(matches.Groups[2].Value);
             }
         }
-
-        public int SequenceLength { get; }
-        public int MultiplyBy { get; }
-        
-        public override int ValueLength => Value.Length + 2;
     }
     
-
-    public abstract class Token
-    {
-        public Token Captured { get; set; }
-        public string Value { get; set; }
-        public abstract int ValueLength { get; }
-
-        protected Token(string value)
-        {
-            Value = value;
-        }
-    }
 
     public class Body
     {
