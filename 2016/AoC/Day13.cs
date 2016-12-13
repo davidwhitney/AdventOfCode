@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -32,7 +33,11 @@ namespace AoC
 ..##....#.
 #...##.###".TrimStart()));
 
-            var cost = _area.ShortestPathTo(7, 4);
+            List<Area.Coord> pathTaken;
+            var cost = _area.ShortestPathTo(7, 4, out pathTaken);
+
+            var travelled = _area.ToString(pathTaken);
+            Console.WriteLine(travelled);
 
             Assert.That(cost, Is.EqualTo(11));
         }
@@ -41,9 +46,14 @@ namespace AoC
         public void Test()
         {
             _area = new Area(1364);
-            var cost = _area.ShortestPathTo(31, 39);
+            _area.GenerateMap(45, 45);
 
-            Assert.That(cost, Is.EqualTo(11));
+            List<Area.Coord> pathTaken;
+            var cost = _area.ShortestPathTo(31, 39, out pathTaken);
+            var travelled = _area.ToString(pathTaken);
+            Console.WriteLine(travelled);
+
+            //Assert.That(cost, Is.EqualTo(11));
         }
     }
 
@@ -81,39 +91,58 @@ namespace AoC
 
         public override string ToString()
         {
-            return ToString(".");
+            return ToString(new List<Coord>());
         }
 
-        public string ToString(string empty)
+        public string ToString(List<Coord> visited)
         {
+            visited = visited ?? new List<Coord>();
+
             var buffer = new StringBuilder();
-            foreach (var row in _storage)
+            for (int y = 0; y < _storage.Count; y++)
             {
-                buffer.AppendLine(string.Join("", row).Replace(".", empty));
+                var row = _storage[y];
+                for(var x = 0; x < row.Count; x++)
+                {
+                    var draw = row[x];
+                    if (visited.Contains(new Coord(x, y)))
+                    {
+                        draw = 'x';
+                    }
+
+                    buffer.Append(draw);
+                }
+                buffer.AppendLine();
             }
             return buffer.ToString().Trim();
         }
 
-        public int ShortestPathTo(int targetX, int targetY)
+        public int ShortestPathTo(int targetX, int targetY, out List<Coord> pathTaken)
         {
             var location = new Coord(1, 1);
             var costSoFar = 0;
             var costOfMovement = 1;
 
+            var target = new Coord(targetX, targetY);
             var visited = new List<Coord>();
+            var badPaths = new List<Coord>();
+            var junctions = new Stack<Coord>();
 
-            while (location.X != targetX || location.Y != targetY)
+            pathTaken = visited;
+
+            while (!Equals(location, target))
             {
                 var choices = new[]
                 {
-                    new Coord(location.X, location.Y + 1),
-                    new Coord(location.X, location.Y - 1),
-                    new Coord(location.X + 1, location.Y),
-                    new Coord(location.X - 1, location.Y),
+                    location.Clone(c => c.Y++),
+                    location.Clone(c => c.Y--),
+                    location.Clone(c => c.X++),
+                    location.Clone(c => c.X--),
                 };
 
                 var paths = choices.Where(c => DetectTerrain(c.X, c.Y) == '.').ToList();
                 paths.RemoveAll(path => visited.Contains(path));
+                paths.RemoveAll(path => badPaths.Contains(path));
 
                 var costToPaths = new Dictionary<Coord, int>();
                 foreach (var availablePath in paths)
@@ -123,10 +152,28 @@ namespace AoC
                     costToPaths.Add(availablePath, tileCost);
                 }
 
-                var selectedPath = costToPaths.OrderBy(x=>x.Value).Select(c=>c.Key).First();
+                if (costToPaths.Count > 1)
+                {
+                    junctions.Push(location.Clone());
+                }
+                
+                var selectedPath = costToPaths.OrderBy(x => x.Value).Select(c => c.Key).FirstOrDefault();
+                if (selectedPath == null)
+                {
+                    // Dead end - let's go back to last junction.
+                    var lastJunction = junctions.Pop();
+                    var reverseDistance = visited.LastIndexOf(lastJunction);
+                    var deadPath = visited.GetRange(reverseDistance + 1, visited.Count - reverseDistance - 1);
+                    costSoFar -= deadPath.Count;
+
+                    visited.RemoveRange(reverseDistance + 1, deadPath.Count);
+                    badPaths.AddRange(deadPath);
+                    location.MoveTo(lastJunction);
+                    continue;
+                }
+
                 visited.Add(selectedPath);
-                location.X = selectedPath.X;
-                location.Y = selectedPath.Y;
+                location.MoveTo(selectedPath);
                 costSoFar++;
             }
 
@@ -160,6 +207,20 @@ namespace AoC
                 {
                     return (X*397) ^ Y;
                 }
+            }
+
+            public Coord Clone(Action<Coord> delta = null)
+            {
+                delta = delta ?? (_ => { });
+                var c = new Coord(X, Y);
+                delta(c);
+                return c;
+            }
+
+            public void MoveTo(Coord c)
+            {
+                X = c.X;
+                Y = c.Y;
             }
         }
     }
