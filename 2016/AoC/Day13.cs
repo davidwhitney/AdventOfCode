@@ -50,7 +50,7 @@ namespace AoC
 
             List<Area.Coord> pathTaken;
             var cost = _area.ShortestPathTo(31, 39, out pathTaken);
-            var travelled = _area.ToString(pathTaken);
+            var travelled = _area.ToString(pathTaken, ' ', '.', '█');
             Console.WriteLine(travelled);
 
             Assert.That(cost, Is.EqualTo(86));
@@ -94,7 +94,7 @@ namespace AoC
             return ToString(new List<Coord>());
         }
 
-        public string ToString(List<Coord> visited)
+        public string ToString(List<Coord> visited, char empty = '.', char path = 'x', char wall = '#')
         {
             visited = visited ?? new List<Coord>();
 
@@ -105,9 +105,19 @@ namespace AoC
                 for(var x = 0; x < row.Count; x++)
                 {
                     var draw = row[x];
+                    if (draw == '.')
+                    {
+                        draw = empty;
+                    }
+
+                    if (draw == '#')
+                    {
+                        draw = wall;
+                    }
+
                     if (visited.Contains(new Coord(x, y)))
                     {
-                        draw = 'x';
+                        draw = path;
                     }
 
                     buffer.Append(draw);
@@ -162,13 +172,8 @@ namespace AoC
                 {
                     // Dead end - let's go back to last junction.
                     var lastJunction = junctions.Pop();
-                    var reverseDistance = visited.LastIndexOf(lastJunction);
-                    var deadPath = visited.GetRange(reverseDistance + 1, visited.Count - reverseDistance - 1);
-                    costSoFar -= deadPath.Count;
-
-                    visited.RemoveRange(reverseDistance + 1, deadPath.Count);
-                    badPaths.AddRange(deadPath);
-                    location.MoveTo(lastJunction);
+                    var backtrackDistance = BackUpTo(location, lastJunction, visited, badPaths);
+                    costSoFar -= backtrackDistance;
                     continue;
                 }
 
@@ -178,6 +183,17 @@ namespace AoC
             }
 
             return costSoFar;
+        }
+
+        private static int BackUpTo(Coord currentLocation, Coord targetLocation, List<Coord> visited, List<Coord> badPaths)
+        {
+            var reverseDistance = visited.LastIndexOf(targetLocation);
+            var deadPath = visited.GetRange(reverseDistance + 1, visited.Count - reverseDistance - 1);
+
+            visited.RemoveRange(reverseDistance + 1, deadPath.Count);
+            badPaths.AddRange(deadPath);
+            currentLocation.MoveTo(targetLocation);
+            return deadPath.Count;
         }
 
         public class Coord
