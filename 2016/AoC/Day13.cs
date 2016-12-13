@@ -55,6 +55,16 @@ namespace AoC
 
             Assert.That(cost, Is.EqualTo(86));
         }
+
+        [Test]
+        public void Test2()
+        {
+            _area = new Area(1364);
+            _area.GenerateMap(45, 45);
+
+            List<Area.Coord> pathTaken;
+            _area.ScanPaths(50);
+        }
     }
 
     public class Area
@@ -82,43 +92,20 @@ namespace AoC
             }
         }
 
-        private char DetectTerrain(int x, int y)
+        public override string ToString() => ToString(new List<Coord>());
+        public string ToString(List<Coord> winningPath, char empty = '.', char path = 'x', char wall = '#')
         {
-            var number = x*x + 3*x + 2*x*y + y + y*y + Seed;
-            var thatAreOne = Convert.ToString(number, 2).Count(_ => _ == '1');
-            return thatAreOne%2 == 0 ? '.' : '#';
-        }
-
-        public override string ToString()
-        {
-            return ToString(new List<Coord>());
-        }
-
-        public string ToString(List<Coord> visited, char empty = '.', char path = 'x', char wall = '#')
-        {
-            visited = visited ?? new List<Coord>();
+            winningPath = winningPath ?? new List<Coord>();
 
             var buffer = new StringBuilder();
-            for (int y = 0; y < _storage.Count; y++)
+            for (var y = 0; y < _storage.Count; y++)
             {
-                var row = _storage[y];
-                for(var x = 0; x < row.Count; x++)
+                for(var x = 0; x < _storage[y].Count; x++)
                 {
-                    var draw = row[x];
-                    if (draw == '.')
-                    {
-                        draw = empty;
-                    }
-
-                    if (draw == '#')
-                    {
-                        draw = wall;
-                    }
-
-                    if (visited.Contains(new Coord(x, y)))
-                    {
-                        draw = path;
-                    }
+                    var draw = _storage[y][x];
+                    draw = draw == '.' ? empty : draw;
+                    draw = draw == '#' ? wall : draw;
+                    draw = winningPath.Contains(new Coord(x, y)) ? path : draw;
 
                     buffer.Append(draw);
                 }
@@ -127,7 +114,7 @@ namespace AoC
             return buffer.ToString().Trim();
         }
 
-        public int ShortestPathTo(int targetX, int targetY, out List<Coord> pathTaken)
+        public int ShortestPathTo(int targetX, int targetY, out List<Coord> pathTaken, int giveUpAt = int.MaxValue)
         {
             var location = new Coord(1, 1);
             var costSoFar = 0;
@@ -137,6 +124,7 @@ namespace AoC
             var visited = new List<Coord>();
             var badPaths = new List<Coord>();
             var junctions = new Stack<Coord>();
+            var locationsVisited = 1;
 
             pathTaken = visited;
 
@@ -176,14 +164,32 @@ namespace AoC
                     costSoFar -= backtrackDistance;
                     continue;
                 }
-
+                
                 visited.Add(selectedPath);
                 location.MoveTo(selectedPath);
+                locationsVisited++;
                 costSoFar++;
             }
 
             return costSoFar;
         }
+
+        public int ScanPaths(int moves)
+        {
+            var travelableLocations = new List<Coord>();
+            var location = new Coord(1, 1);
+            var choices = new[]
+            {
+                location.Clone(c => c.Y++),
+                location.Clone(c => c.Y--),
+                location.Clone(c => c.X++),
+                location.Clone(c => c.X--),
+            };
+
+            return 0;
+        }
+
+        private char DetectTerrain(int x, int y) => Convert.ToString(x * x + 3 * x + 2 * x * y + y + y * y + Seed, 2).Count(_ => _ == '1') % 2 == 0 ? '.' : '#';
 
         private static int BackUpTo(Coord currentLocation, Coord targetLocation, List<Coord> visited, List<Coord> badPaths)
         {
@@ -200,23 +206,15 @@ namespace AoC
         {
             public int X { get; set; }
             public int Y { get; set; }
+            public override bool Equals(object obj) => Equals((Coord)obj);
+            protected bool Equals(Coord other) => X == other.X && Y == other.Y;
 
             public Coord(int x, int y)
             {
                 X = x;
                 Y = y;
             }
-
-            public override bool Equals(object obj)
-            {
-                return Equals((Coord)obj);
-            }
-
-            protected bool Equals(Coord other)
-            {
-                return X == other.X && Y == other.Y;
-            }
-
+            
             public override int GetHashCode()
             {
                 unchecked
@@ -227,9 +225,8 @@ namespace AoC
 
             public Coord Clone(Action<Coord> delta = null)
             {
-                delta = delta ?? (_ => { });
                 var c = new Coord(X, Y);
-                delta(c);
+                (delta ?? (_ => { }))(c);
                 return c;
             }
 
