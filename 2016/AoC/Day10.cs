@@ -141,6 +141,7 @@ namespace AoC
             {
                 var selectedCommand = _commands.SingleOrDefault(c => c.Key.IsMatch(op));
                 var matches = selectedCommand.Key.Matches(op);
+
                 selectedCommand.Value(matches);
             }
         }
@@ -151,38 +152,35 @@ namespace AoC
         private void AssignValue(int val, int botId)
         {
             var bot = GetBot(botId);
-            bot.SupplyChip(val);
+            bot.SupplyValue(val);
 
-            if (bot.High.HasValue
-                && bot.Low.HasValue)
+            if (bot.HasHighAndLow)
             {
-                var route = DataRouting.SingleOrDefault(x => x.Key == botId);
-                if (route.Value == null)
-                {
-                    return;
-                }
-
-                if (route.Value.HighType == "output")
-                {
-                    GetOuput(route.Value.HighTarget).Value = bot.High.Value;
-                }
-                else
-                {
-                    GetBot(route.Value.HighTarget).High = bot.High.Value;
-                }
-
-                if (route.Value.LowType == "output")
-                {
-                    GetOuput(route.Value.LowTarget).Value = bot.Low.Value;
-                }
-                else
-                {
-                    GetBot(route.Value.LowTarget).Low = bot.Low.Value;
-                }
-
-                bot.High = null;
-                bot.Low = null;
+                RouteValues(botId, bot);
             }
+        }
+
+        private void RouteValues(int botId, Bot bot)
+        {
+            var route = DataRouting.SingleOrDefault(x => x.Key == botId);
+            if (route.Value == null)
+            {
+                return;
+            }
+
+            var highDest = route.Value.HighType == "output"
+                ? (ITakeValues) GetOuput(route.Value.HighTarget)
+                : GetBot(route.Value.HighTarget);
+
+            highDest.SupplyValue(bot.High.Value);
+            bot.RemoveHigh();
+
+            var lowDest = route.Value.LowType == "output"
+                ? (ITakeValues) GetOuput(route.Value.LowTarget)
+                : GetBot(route.Value.LowTarget);
+
+            lowDest.SupplyValue(bot.Low.Value);
+            bot.RemoveLow();
         }
 
         private Bot GetBot(int botId)
@@ -194,13 +192,13 @@ namespace AoC
             return BotsById[botId];
         }
 
-        private OutputBin GetOuput(int botId)
+        private OutputBin GetOuput(int outputId)
         {
-            if (!OutputsById.ContainsKey(botId))
+            if (!OutputsById.ContainsKey(outputId))
             {
-                OutputsById.Add(botId, new OutputBin());
+                OutputsById.Add(outputId, new OutputBin());
             }
-            return OutputsById[botId];
+            return OutputsById[outputId];
         }
     }
 
@@ -220,36 +218,50 @@ namespace AoC
         }
     }
 
-    public class OutputBin
+    public interface ITakeValues
+    {
+        void SupplyValue(int val);
+    }
+    public class OutputBin : ITakeValues
     {
         public int? Value { get; set; }
         public int? OriginBot { get; set; }
+
+        public void SupplyValue(int val)
+        {
+            Value = val;
+        }
     }
 
-    public class Bot
+    public class Bot : ITakeValues
     {
-        public int? Low { get; set; }
-        public int? High { get; set; }
+        private List<int> _values;
+        public int? Low => _values.FirstOrDefault();
+        public int? High => _values.LastOrDefault();
+        public bool HasHighAndLow => _values.Count >= 2;
 
-        public void SupplyChip(int val)
+        public Bot()
         {
-            var currentLow = Low;
-            var currentHigh = High;
-
-            if (val < Low.GetValueOrDefault(int.MaxValue))
-            {
-                Low = val;
-                if (High == null)
-                {
-                    High = currentLow;
-                }
-            }
-
-            if (val > Low.GetValueOrDefault(int.MinValue)
-                && (High == null || val > High))
-            {
-                High = val;
-            }
+            _values = new List<int>();
         }
+
+        public void SupplyValue(int val)
+        {
+            _values.Add(val);
+            _values = _values.OrderBy(x => x).ToList();
+        }
+        
+        public void RemoveHigh()
+        {
+            if (_values.Count > 0)
+                _values.RemoveAt(_values.Count - 1);
+        }
+
+        public void RemoveLow()
+        {
+            if (_values.Count > 0)
+                _values.RemoveAt(0);
+        }
+
     }
 }
