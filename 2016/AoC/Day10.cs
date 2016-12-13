@@ -104,9 +104,6 @@ namespace AoC
             Assert.That(_factory.OutputsById[0].Value, Is.EqualTo(5));
             Assert.That(_factory.OutputsById[1].Value, Is.EqualTo(2));
             Assert.That(_factory.OutputsById[2].Value, Is.EqualTo(3));
-
-            Assert.That(_factory.OutputsById[0].OriginBot, Is.EqualTo(2));
-            Assert.That(_factory.OutputsById[1].OriginBot, Is.EqualTo(2));
         }
     }
 
@@ -152,35 +149,52 @@ namespace AoC
         private void AssignValue(int val, int botId)
         {
             var bot = GetBot(botId);
-            bot.SupplyValue(val);
+            bot.SupplyValue(val, botId);
 
+            var invoke = new Stack<int>();
             if (bot.HasHighAndLow)
             {
-                RouteValues(botId, bot);
+                invoke.Push(botId);
             }
+
+            while (invoke.Any())
+            {
+                var id = invoke.Pop();
+                var toProcess = RouteValues(id);
+                toProcess.ForEach(i => { if (!invoke.Contains(i)) { invoke.Push(i); } });
+            }
+
         }
 
-        private void RouteValues(int botId, Bot bot)
+        private List<int> RouteValues(int botId)
         {
             var route = DataRouting.SingleOrDefault(x => x.Key == botId);
             if (route.Value == null)
             {
-                return;
+                return new List<int>();
             }
 
+            var bot = GetBot(botId);
+            
             var highDest = route.Value.HighType == "output"
                 ? (ITakeValues) GetOuput(route.Value.HighTarget)
                 : GetBot(route.Value.HighTarget);
 
-            highDest.SupplyValue(bot.High.Value);
+            highDest.SupplyValue(bot.High.Value, botId);
             bot.RemoveHigh();
 
             var lowDest = route.Value.LowType == "output"
                 ? (ITakeValues) GetOuput(route.Value.LowTarget)
                 : GetBot(route.Value.LowTarget);
 
-            lowDest.SupplyValue(bot.Low.Value);
+            lowDest.SupplyValue(bot.Low.Value, botId);
             bot.RemoveLow();
+
+
+            var processOthers = new List<int>();
+            if (route.Value.HighType == "bot") processOthers.Add(route.Value.HighTarget);
+            if (route.Value.LowType == "bot") processOthers.Add(route.Value.LowTarget);
+            return processOthers;
         }
 
         private Bot GetBot(int botId)
@@ -220,16 +234,17 @@ namespace AoC
 
     public interface ITakeValues
     {
-        void SupplyValue(int val);
+        void SupplyValue(int val, int originBot);
     }
     public class OutputBin : ITakeValues
     {
         public int? Value { get; set; }
         public int? OriginBot { get; set; }
 
-        public void SupplyValue(int val)
+        public void SupplyValue(int val, int originBot)
         {
             Value = val;
+            OriginBot = originBot;
         }
     }
 
@@ -245,7 +260,7 @@ namespace AoC
             _values = new List<int>();
         }
 
-        public void SupplyValue(int val)
+        public void SupplyValue(int val, int originBot)
         {
             _values.Add(val);
             _values = _values.OrderBy(x => x).ToList();
