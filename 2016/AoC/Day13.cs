@@ -53,7 +53,7 @@ namespace AoC
             var travelled = _area.ToString(pathTaken);
             Console.WriteLine(travelled);
 
-            //Assert.That(cost, Is.EqualTo(11));
+            Assert.That(cost, Is.EqualTo(86));
         }
     }
 
