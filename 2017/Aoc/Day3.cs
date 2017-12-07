@@ -24,15 +24,30 @@ namespace Aoc
             Assert.That(distance, Is.EqualTo(expectedSteps));
             //Console.WriteLine(grid.ToString());
         }
+        
+        [Test]
+        public void Part2()
+        {
+            var grid = new Grid(277678, true);
+            
+            Console.WriteLine(grid.NextBiggest);
+        }
 
         public class Grid
         {
-            private readonly int?[,] _array;
+            private readonly int _upTo;
+            private readonly bool _part2;
+            private int?[,] _array;
+            public int NextBiggest { get; set; }
 
-            public Grid(int upTo)
+            public Grid(int upTo, bool part2 = false)
             {
-                var targetBoxSize = GetBoundingBoxSize(upTo);
-                _array = GenerateGrid(targetBoxSize);
+                _upTo = upTo;
+                _part2 = part2;
+
+                var targetBoxSize = _part2 ? GetBoundingBoxSize(upTo * 2) : GetBoundingBoxSize(upTo);
+
+                GenerateGrid(targetBoxSize);
             }
 
             public int DistanceBetween(int start, int target)
@@ -59,12 +74,11 @@ namespace Aoc
 
             private class Location { public int X { get; set; } public int Y { get; set; } }
 
-            private static int?[,] GenerateGrid(int targetBoxSize)
+            private void GenerateGrid(int targetBoxSize)
             {
                 var dimension = targetBoxSize;
-                var array = new int?[dimension + 1, dimension + 1];
-                var x = dimension/2;
-                var y = dimension/2;
+                _array = new int?[dimension + 1, dimension + 1];
+                var location = new Location {X = dimension / 2, Y = dimension / 2};
                 var remaining = dimension * dimension;
                 var count = 1;
 
@@ -72,35 +86,65 @@ namespace Aoc
 
                 while (remaining > 0)
                 {
-                    array[y, x] = count;
+                    var value = GetValue(count, location);
+
+                    if (_part2 && value > _upTo)
+                    {
+                        NextBiggest = value;
+                        break;
+                    }
+
+                    _array[location.Y, location.X] = value;
 
                     Location next;
 
                     if (count == 1)
                     {
-                        next = NextLocation(currentDirection, x, y);
+                        next = NextLocation(currentDirection, location);
                     }
                     else
                     {
                         var turnAttempt = ChangeDirection(currentDirection);
-                        var previewnext = NextLocation(turnAttempt, x, y);
-                        if (array[previewnext.Y, previewnext.X] == null)
+                        var previewnext = NextLocation(turnAttempt, location);
+                        if (_array[previewnext.Y, previewnext.X] == null)
                         {
                             currentDirection = ChangeDirection(currentDirection);
                             next = previewnext;
                         }
                         else
                         {
-                            next = NextLocation(currentDirection, x, y);
+                            next = NextLocation(currentDirection, location);
                         }
                     }
 
-                    x = next.X;
-                    y = next.Y;
+                    location = next;
                     count++;
                     remaining--;
                 }
-                return array;
+            }
+
+            private int GetValue(int count, Location current)
+            {
+                if (!_part2) return count;
+
+                var neighbours = new List<Location>
+                {
+                    new Location {X = current.X - 1, Y = current.Y - 1},
+                    new Location {X = current.X, Y = current.Y - 1},
+                    new Location {X = current.X + 1, Y = current.Y - 1},
+                    new Location {X = current.X - 1, Y = current.Y},
+                    new Location {X = current.X + 1, Y = current.Y},
+                    new Location {X = current.X - 1, Y = current.Y + 1},
+                    new Location {X = current.X, Y = current.Y + 1},
+                    new Location {X = current.X + 1, Y = current.Y + 1},
+                };
+
+                neighbours.RemoveAll(n => n.X > _array.Length);
+                neighbours.RemoveAll(n => n.Y > _array.Length);
+
+                var val = neighbours.Sum(neighbour => _array[neighbour.Y, neighbour.X].GetValueOrDefault(0));
+
+                return val == 0 ? 1 : val;
             }
 
             private static int GetBoundingBoxSize(int input)
@@ -123,9 +167,9 @@ namespace Aoc
                 return walkDirections[nextDirection].ToString();
             }
 
-            private static Location NextLocation(string currentDirection, int currentX, int currentY)
+            private static Location NextLocation(string currentDirection, Location current)
             {
-                var location = new Location {X = currentX, Y = currentY };
+                var location = new Location {X = current.X, Y = current.Y };
 
                 if (currentDirection == "E") location.X++;
                 if (currentDirection == "N") location.Y--;
