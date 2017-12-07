@@ -15,6 +15,7 @@ namespace Aoc
             var cycles = memory.ReallocateUntilRepeated();
 
             Assert.That(cycles, Is.EqualTo(5));
+            Assert.That(memory.RepeatedAt, Is.EqualTo(4));
         }
 
         [Test]
@@ -25,13 +26,16 @@ namespace Aoc
             var cycles = memory.ReallocateUntilRepeated();
 
             Assert.That(cycles, Is.EqualTo(7864));
+            Assert.That(memory.RepeatedAt, Is.EqualTo(1695));
         }
 
     }
 
     public class MemoryBanks : List<MemoryBank>
     {
+        public int RepeatedAt { get; set; }
         private readonly List<string> _previouslySeenBlockConfigurations = new List<string>();
+
 
         public MemoryBanks(string blockMap)
         {
@@ -54,6 +58,8 @@ namespace Aoc
 
                 if (_previouslySeenBlockConfigurations.Contains(hash))
                 {
+                    RepeatedAt = _previouslySeenBlockConfigurations.Count -
+                                 _previouslySeenBlockConfigurations.IndexOf(hash);
                     break;
                 }
 
@@ -88,7 +94,7 @@ namespace Aoc
             return Hash();
         }
         
-        private string Hash() => string.Join(",", this.Select(x => x.Hash()));
+        private string Hash() => string.Join(" ", this.Select(x => x.Hash()));
     }
 
     public class MemoryBank
@@ -96,7 +102,7 @@ namespace Aoc
         public int Id { get; set; }
         public int BlockCount { get; set; }
         public MemoryBank(int id) => Id = id;
-        public string Hash() => $"({Id}:{BlockCount})";
+        public string Hash() => $"{BlockCount}";
     }
 
 }
