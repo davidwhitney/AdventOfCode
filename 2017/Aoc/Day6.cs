@@ -28,7 +28,6 @@ namespace Aoc
             Assert.That(cycles, Is.EqualTo(7864));
             Assert.That(memory.RepeatedAt, Is.EqualTo(1695));
         }
-
     }
 
     public class MemoryBanks : List<MemoryBank>
@@ -94,7 +93,7 @@ namespace Aoc
             return Hash();
         }
         
-        private string Hash() => string.Join(" ", this.Select(x => x.Hash()));
+        private string Hash() => string.Join(" ", this.Select(x => x.BlockCount));
     }
 
     public class MemoryBank
@@ -102,7 +101,6 @@ namespace Aoc
         public int Id { get; set; }
         public int BlockCount { get; set; }
         public MemoryBank(int id) => Id = id;
-        public string Hash() => $"{BlockCount}";
     }
 
 }
