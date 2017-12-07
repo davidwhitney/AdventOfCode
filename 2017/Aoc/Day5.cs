@@ -28,20 +28,45 @@ namespace Aoc
             Assert.That(offsets.StepsExecuted, Is.EqualTo(358131));
         }
 
+        [Test]
+        public void Part2()
+        {
+            var offsets = new InstructionStack();
+            offsets.AddRange(_testInput);
+
+            offsets.Process(true);
+
+            Assert.That(offsets.StepsExecuted, Is.EqualTo(25558839));
+        }
+
         public class InstructionStack : List<int>
         {
             public int ProgramCounter { get; set; }
             public int StepsExecuted { get; set; }
 
-            public void Process()
+            public void Process(bool part2 = false)
             {
                 while (ProgramCounter < Count)
                 {
                     StepsExecuted++;
+                    var value = this[ProgramCounter];
                     var current = ProgramCounter;
-                    var value = this[current];
                     ProgramCounter += value;
+
                     this[current]++;
+
+                    if (part2)
+                    {
+                        this[current]--;
+                        if (value >= 3)
+                        {
+                            this[current]--;
+                        }
+                        else
+                        {
+                            this[current]++;
+                        }
+                    }
                 }
             }
         }
