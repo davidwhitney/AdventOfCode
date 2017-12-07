@@ -13,7 +13,7 @@ namespace Aoc
     {
         [TestCase(1, 0)]
         [TestCase(12, 3)]
-        //[TestCase(277678, 475)]
+        [TestCase(277678, 475)]
         public void Part1(int start, int expectedSteps)
         {
             var input = start;
@@ -22,6 +22,7 @@ namespace Aoc
             var distance = grid.DistanceBetween(start, 1);
 
             Assert.That(distance, Is.EqualTo(expectedSteps));
+            //Console.WriteLine(grid.ToString());
         }
 
         public class Grid
@@ -61,35 +62,37 @@ namespace Aoc
             private static int?[,] GenerateGrid(int targetBoxSize)
             {
                 var dimension = targetBoxSize;
-                var array = new int?[dimension, dimension];
+                var array = new int?[dimension + 1, dimension + 1];
                 var x = dimension/2;
                 var y = dimension/2;
                 var remaining = dimension * dimension;
                 var count = 1;
 
-                var currentDirection = "S";
+                var currentDirection = "E";
 
                 while (remaining > 0)
                 {
                     array[y, x] = count;
 
-                    Location next = null;
-                    try
-                    {
-                        var turnAttempt = ChangeDirection(currentDirection);
-                        next = NextLocation(turnAttempt, x, y);
-                        var value = array[next.Y, next.X];
-                        if (value != null)
-                        {
-                            throw new Exception("Can't turn, occupied");
-                        }
+                    Location next;
 
-                        currentDirection = turnAttempt;
+                    if (count == 1)
+                    {
+                        next = NextLocation(currentDirection, x, y);
                     }
-                    catch
+                    else
                     {
                         var turnAttempt = ChangeDirection(currentDirection);
-                        next = NextLocation(turnAttempt, x, y);
+                        var previewnext = NextLocation(turnAttempt, x, y);
+                        if (array[previewnext.Y, previewnext.X] == null)
+                        {
+                            currentDirection = ChangeDirection(currentDirection);
+                            next = previewnext;
+                        }
+                        else
+                        {
+                            next = NextLocation(currentDirection, x, y);
+                        }
                     }
 
                     x = next.X;
