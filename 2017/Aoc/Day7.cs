@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Aoc
@@ -34,6 +32,8 @@ cntj (57)";
 
             var programs = ParseLines(lines);
             var root = FindRoot(programs);
+
+            var outlier = FindUnbalanced(root);
         }
 
         [Test]
@@ -44,46 +44,61 @@ cntj (57)";
             var programs = ParseLines(lines);
             var root = FindRoot(programs);
 
-            Console.WriteLine(root);
+            Console.WriteLine(root.Name);
+
+            var outlier = FindUnbalanced(root);
+        }
+
+        private static Program FindUnbalanced(Program root)
+        {
+            var outlierWeight = root.WeightGroups.SingleOrDefault(x => x.Count() == 1);
+            return outlierWeight == null ? root : FindUnbalanced(outlierWeight.Single());
         }
 
         private static List<Program> ParseLines(string[] lines)
         {
             var match = new Regex(@"(?<name>\w+) \((?<weight>[0-9]+)\)( \s*(-> )?(?<supports>.*))?");
 
+            var dictionary = new Dictionary<string, Tuple<Program, List<string>>>();
             var programs = new List<Program>();
 
-            foreach (var line in lines)
+            foreach (var captures in lines.Select(l => match.Match(l)))
             {
-                var captures = match.Match(line);
-                if (!captures.Success)
-                {
-                    continue;
-                }
-
-                programs.Add(new Program
+                var program = new Program
                 {
                     Name = captures.Groups["name"].Value,
-                    Weight = int.Parse(captures.Groups["weight"].Value),
-                    Supports = new List<string>(captures.Groups["supports"].Value
-                        .Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries))
-                });
+                    Weight = int.Parse(captures.Groups["weight"].Value)
+                };
+
+                var references = captures.Groups["supports"].Value.Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                dictionary.Add(program.Name, new Tuple<Program, List<string>>(program, references));
+                programs.Add(program);
             }
+
+            foreach (var program in dictionary)
+            {
+                foreach (var dep in program.Value.Item2)
+                {
+                    program.Value.Item1.References.Add(dictionary[dep].Item1);
+                }
+            }
+
             return programs;
         }
 
-        private static string FindRoot(List<Program> programs)
+        private static Program FindRoot(List<Program> programs)
         {
-            var onlyWithChains = programs.Where(p => p.Supports.Count > 0).ToList();
+            var onlyWithChains = programs.Where(p => p.References.Count > 0).ToList();
 
             var allNames = onlyWithChains.Select(x => x.Name);
-            var allDependencies = onlyWithChains.SelectMany(p => p.Supports).ToList();
+            var allDependencies = onlyWithChains.SelectMany(p => p.References).Select(x=>x.Name).ToList();
 
             foreach (var name in allNames)
             {
                 if (!allDependencies.Contains(name))
                 {
-                    return name;
+                    return programs.Single(x=>x.Name == name);
                 }
             }
 
@@ -95,6 +110,10 @@ cntj (57)";
     {
         public string Name { get; set; }
         public int Weight { get; set; }
-        public List<string> Supports { get; set; }
+        public List<Program> References { get; set; } = new List<Program>();
+
+        public int TotalWeight => Weight + References.Sum(i => i.TotalWeight);
+        public IEnumerable<IGrouping<int, Program>> WeightGroups => References.GroupBy(x => x.TotalWeight).OrderBy(x=>x.Key);
+        public bool ChildrenBalance => WeightGroups.Count() == 1;
     }
 }
