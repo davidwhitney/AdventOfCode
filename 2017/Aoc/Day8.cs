@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Aoc
@@ -23,9 +21,10 @@ namespace Aoc
                 "c inc -20 if c == 10"
             };
 
-            var state = Process(stack);
+            new Cpu().Process(stack);
 
-            Console.WriteLine(state.Max(x=>x.Value));
+            Console.WriteLine(new Cpu().FinalHighestValue);
+            Console.WriteLine(new Cpu().HighestValue);
         }
 
         [Test]
@@ -33,12 +32,21 @@ namespace Aoc
         {
             var lines = File.ReadAllLines(@"C:\dev\AdventOfCode\2017\Aoc\Day8.txt");
 
-            var state = Process(lines);
+            new Cpu().Process(lines);
 
-            Console.WriteLine(state.Max(x => x.Value));
+            Console.WriteLine(new Cpu().FinalHighestValue);
+            Console.WriteLine(new Cpu().HighestValue);
         }
+    }
 
-        private static Dictionary<string, int> Process(IEnumerable<string> stack)
+
+    public class Cpu
+    {
+        public int HighestValue { get; set; }
+        public int FinalHighestValue { get; set; }
+
+
+        public Dictionary<string, int> Process(IEnumerable<string> stack)
         {
             var instructions = ParseStack(stack);
             var registers = new Dictionary<string, int>();
@@ -52,17 +60,20 @@ namespace Aoc
                     registers[instruction.Target] += instruction.Value;
                 else
                     registers[instruction.Target] -= instruction.Value;
+
+                var highestCurrent = registers.Max(x => x.Value);
+                HighestValue = HighestValue < highestCurrent ? highestCurrent : HighestValue;
             }
 
+            FinalHighestValue = registers.Max(x => x.Value);
             return registers;
         }
 
         private static List<Instruction> ParseStack(IEnumerable<string> stack)
         {
-            var match = new Regex(
-                @"(?<target>\w+) (?<command>inc|dec) (?<Value>-?[0-9]+) if (?<ConditionLeft>\w+) (?<operator>>|<|==|<=|>=|!=) (?<predicateValue>-?[0-9]+)");
+            var pattern = new Regex(@"(?<target>\w+) (?<command>inc|dec) (?<Value>-?[0-9]+) if (?<ConditionLeft>\w+) (?<operator>>|<|==|<=|>=|!=) (?<predicateValue>-?[0-9]+)");
 
-            return stack.Select(line => match.Match(line))
+            return stack.Select(line => pattern.Match(line))
                 .Where(captures => captures.Success)
                 .Select(captures => new Instruction
                 {
@@ -89,9 +100,9 @@ namespace Aoc
 
     public static class Extension
     {
-        public static bool Operator(this string logic, int x, int y)
+        public static bool Operator(this string operatorAsText, int x, int y)
         {
-            switch (logic)
+            switch (operatorAsText)
             {
                 case ">": return x > y;
                 case "<": return x < y;
@@ -99,7 +110,7 @@ namespace Aoc
                 case "!=": return x != y;
                 case "<=": return x <= y;
                 case ">=": return x >= y;
-                default: throw new Exception("invalid logic");
+                default: throw new Exception("invalid operatorAsText");
             }
         }
     }
