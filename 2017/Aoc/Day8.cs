@@ -45,7 +45,6 @@ namespace Aoc
         public int HighestValue { get; set; }
         public int FinalHighestValue { get; set; }
 
-
         public Dictionary<string, int> Process(IEnumerable<string> stack)
         {
             var instructions = ParseStack(stack);
