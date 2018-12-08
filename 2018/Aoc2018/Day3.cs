@@ -12,51 +12,28 @@ namespace Aoc2018
         [Test]
         public void Example1()
         {
-            var claims = new List<string>()
+            var claims = new List<string>
             {
                 "#1 @ 1,3: 4x4",
                 "#2 @ 3,1: 4x4",
                 "#3 @ 5,5: 2x2"
             };
 
-            var countOverlap = CountOverlap(claims);
+            var sut = new Arranger(claims);
 
-            Assert.That(countOverlap, Is.EqualTo(4));
+            Assert.That(sut.Overlap, Is.EqualTo(4));
         }
 
         [Test]
         public void Task1()
         {
-            var claims = Day3Input.Value.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries).ToList();
+            var claims = Day3Input.Value.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
+            
+            var sut = new Arranger(claims);
 
-            var countOverlap = CountOverlap(claims);
-
-            Assert.That(countOverlap, Is.EqualTo(119551));
+            Assert.That(sut.Overlap, Is.EqualTo(119551));
+            Assert.That(sut.Uncontested.Single(), Is.EqualTo("1124"));
         }
-
-        private static int CountOverlap(List<string> claims)
-        {
-            var typed = claims.Select(Claim.FromString).SelectMany(x => x.ToLocations()).ToList();
-
-            var seen = new Dictionary<string, int>();
-
-            foreach (var item in typed)
-            {
-                var key = $"{item.X}_{item.Y}";
-                if (!seen.ContainsKey(key))
-                {
-                    seen.Add(key, 1);
-                }
-                else
-                {
-                    seen[key]++;
-                }
-            }
-
-            var countOverlap = seen.Count(x => x.Value >= 2);
-            return countOverlap;
-        }
-
 
         [Test]
         public void Claim_CanConstruct()
@@ -71,22 +48,54 @@ namespace Aoc2018
         }
     }
 
+    public class Arranger
+    {
+        private List<Claim> _claims;
+
+        public int Overlap { get; set; }
+        public List<string> Contested { get; set; } = new List<string>();
+        public List<string> Uncontested => _claims.Select(x=>x.Id).Except(Contested).ToList();
+
+        public Arranger(IEnumerable<string> c)
+        {
+            _claims = c.Select(Claim.FromString).ToList();
+            var typed = _claims.SelectMany(x => x.ToLocations());
+
+            var seen = new Dictionary<string, int>();
+            var items = new Dictionary<string, Location>();
+
+            foreach (var location in typed)
+            {
+                if (!seen.ContainsKey(location.Key))
+                {
+                    seen.Add(location.Key, 1);
+                    items.Add(location.Key, location);
+                }
+                else
+                {
+                    Contested.Add(location.SourceClaimId);
+                    Contested.Add(items[location.Key].SourceClaimId);
+
+                    seen[location.Key]++;
+                    items[location.Key] = location;
+                }
+            }
+
+            Overlap = seen.Count(x => x.Value >= 2);
+        }
+    }
+
     public class Location
     {
         public int X { get; set; }
         public int Y { get; set; }
+        public string Key => $"{X}_{Y}";
+        public string SourceClaimId { get; set; }
 
         public Location(int x, int y)
         {
             X = x;
             Y = y;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Location)) return false;
-
-            return X == ((Location) obj).X && Y == ((Location) obj).Y;
         }
     }
 
@@ -118,7 +127,7 @@ namespace Aoc2018
             {
                 for (var y = Top; y < Top + Height; y++)
                 {
-                    yield return new Location(x, y);
+                    yield return new Location(x, y) {SourceClaimId = Id};
                 }
             }
         }
