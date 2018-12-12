@@ -53,6 +53,7 @@ namespace Aoc2018
         }
 
         [Test]
+        [Ignore("Slow")]
         public void Test2()
         {
             var chain = File.ReadAllText("Day5.txt");
