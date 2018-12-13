@@ -28,11 +28,11 @@ namespace Aoc2018
             Assert.That(map.Bounds.Count, Is.EqualTo(4));
             Assert.That(map.BoundedOwnership.Count, Is.EqualTo(2));
             Assert.That(map.LargestArea, Is.EqualTo(17));
-
+            Assert.That(map.CountSafeZone(32), Is.EqualTo(16));
         }
 
         [Test]
-        public void Test1()
+        public void Test()
         {
             var coords = TestInput();
 
@@ -41,6 +41,7 @@ namespace Aoc2018
             Assert.That(map.Bounds.Count, Is.EqualTo(4));
             Assert.That(map.BoundedOwnership.Count, Is.EqualTo(46));
             Assert.That(map.LargestArea, Is.EqualTo(5365));
+            Assert.That(map.CountSafeZone(10000), Is.EqualTo(42513));
         }
 
         private static List<Map.Cordinate> TestInput()
@@ -138,6 +139,21 @@ namespace Aoc2018
             FindOwners();
         }
 
+        public int CountSafeZone(int size)
+        {
+            var count = 0;
+            for (var x = MinX; x <= MaxX; x++)
+            for (var y = MinY; y <= MaxY; y++)
+            {
+                var currentLocation = new Cordinate(x, y);
+
+                var distances = Cordinates.ToDictionary(c => c, c => c.DistanceFrom(currentLocation));
+                var sum = distances.Sum(_ => _.Value);
+                if (sum < size) count++;
+            }
+            return count;
+        }
+
         private void FindBounds(IReadOnlyCollection<Cordinate> coords)
         {
             MinY = coords.Min(_ => _.Y);
@@ -195,44 +211,13 @@ namespace Aoc2018
         private Cordinate FindOwner(Cordinate currentLocation)
         {
             var distances = Cordinates.ToDictionary(c => c, c => c.DistanceFrom(currentLocation));
-
             var rankedByDistance = distances
                 .GroupBy(_ => _.Value)
                 .OrderBy(_ => _.Key)
                 .ToList();
 
             var closestDistance = rankedByDistance.First().ToList();
-
-            if (closestDistance.Count >= 2)
-            {
-                return null;
-                // return grouped.First().Key;
-            }
-
-            return closestDistance.First().Key;
-
-            //Cordinate closest = null;
-            //var distanceOfCloset = int.MaxValue;
-
-            //foreach (var node in Cordinates.ToList())
-            //{
-            //    var distanceFrom = distances[node];
-
-            //    if (distanceFrom == distanceOfCloset)
-            //    {
-            //        closest = null;
-            //        distanceOfCloset = int.MaxValue;
-            //        continue;
-            //    }
-
-            //    if (distanceFrom < distanceOfCloset)
-            //    {
-            //        closest = node;
-            //        distanceOfCloset = distanceFrom;
-            //    }
-            //}
-
-            // return closest;
+            return closestDistance.Count >= 2 ? null : closestDistance.First().Key;
         }
 
         public override string ToString()
