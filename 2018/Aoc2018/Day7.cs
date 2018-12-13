@@ -25,10 +25,10 @@ namespace Aoc2018
 
             var dependencies = instructions.Select(Parse).ToList();
             var steps = GetSteps(dependencies);
-            Prioritise(steps);
 
-            var rendered = string.Join("", steps.Select(x=>x.Id));
-            Assert.That(rendered, Is.EqualTo("CABDFE"));
+            var ordered = Prioritise(steps);
+
+            Assert.That(ordered, Is.EqualTo("CABDFE"));
         }
 
         [Test]
@@ -38,31 +38,28 @@ namespace Aoc2018
 
             var dependencies = instructions.Select(Parse).ToList();
             var steps = GetSteps(dependencies);
-            Prioritise(steps);
 
-            var rendered = string.Join("", steps.Select(x=>x.Id));
-            Assert.That(rendered, Is.EqualTo("CABDFE"));
+            var ordered = Prioritise(steps);
+
+            Assert.That(ordered, Is.EqualTo("BKCJMSDVGHQRXFYZOAULPIEWTN"));
         }
 
-        private static void Prioritise(List<Step> steps)
+        private static string Prioritise(List<Step> steps)
         {
-            for (var i = 0; i < steps.Count; i++)
+            var candidates = new List<Step>(steps);
+            var scheduledOrder = new List<string>();
+            
+            while (candidates.Any())
             {
-                var step = steps[i];
-                var orderedDependencies = step.Dependencies.OrderBy(x => x).ToList();
+                var freeOfDeps = candidates.Where(x => x.Dependencies.All(dep => scheduledOrder.Contains(dep))).OrderBy(x => x.Id).ToList();
 
-                foreach (var dep in orderedDependencies)
-                {
-                    var stepsBeforeMe = steps.Take(i).Select(x => x.Id).ToList();
-                    if (!stepsBeforeMe.Contains(dep))
-                    {
-                        var moving = steps.Single(x => x.Id == dep);
-                        steps.Remove(moving);
-                        steps.Insert(i, moving);
-                        i = 0;
-                    }
-                }
+                var firstAvailable = freeOfDeps.First();
+
+                scheduledOrder.Add(firstAvailable.Id);
+                candidates.RemoveAll(x => x.Id == firstAvailable.Id);
             }
+
+            return string.Join("", scheduledOrder);
         }
 
         private static List<Step> GetSteps(List<Dependency> dependencies)
@@ -93,6 +90,7 @@ namespace Aoc2018
     {
         public string Id { get; set; }
         public List<string> Dependencies { get; set; } = new List<string>();
+        public override string ToString() => Id;
     }
 
     public class Dependency
